@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as ManufacturerRouteImport } from './routes/manufacturer'
 import { Route as RetailerRouteImport } from './routes/retailer'
 import { Route as ManufacturerIndexRouteImport } from './routes/manufacturer.index'
@@ -32,6 +33,11 @@ import { Route as RetailerTemplatesRouteImport } from './routes/retailer.templat
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ManufacturerRoute = ManufacturerRouteImport.update({
@@ -127,6 +133,7 @@ const RetailerTemplatesRoute = RetailerTemplatesRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
   '/manufacturer': typeof ManufacturerRouteWithChildren
   '/retailer': typeof RetailerRouteWithChildren
   '/manufacturer/analytics': typeof ManufacturerAnalyticsRoute
@@ -148,6 +155,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
   '/manufacturer/analytics': typeof ManufacturerAnalyticsRoute
   '/manufacturer/brand': typeof ManufacturerBrandRoute
   '/manufacturer/campaigns': typeof ManufacturerCampaignsRoute
@@ -168,6 +176,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
   '/manufacturer': typeof ManufacturerRouteWithChildren
   '/retailer': typeof RetailerRouteWithChildren
   '/manufacturer/analytics': typeof ManufacturerAnalyticsRoute
@@ -191,6 +200,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/login'
     | '/manufacturer'
     | '/retailer'
     | '/manufacturer/analytics'
@@ -212,6 +222,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/login'
     | '/manufacturer/analytics'
     | '/manufacturer/brand'
     | '/manufacturer/campaigns'
@@ -231,6 +242,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/login'
     | '/manufacturer'
     | '/retailer'
     | '/manufacturer/analytics'
@@ -253,6 +265,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  LoginRoute: typeof LoginRoute
   ManufacturerRoute: typeof ManufacturerRouteWithChildren
   RetailerRoute: typeof RetailerRouteWithChildren
 }
@@ -264,6 +277,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/manufacturer': {
@@ -449,6 +469,7 @@ const RetailerRouteWithChildren = RetailerRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  LoginRoute: LoginRoute,
   ManufacturerRoute: ManufacturerRouteWithChildren,
   RetailerRoute: RetailerRouteWithChildren,
 }
