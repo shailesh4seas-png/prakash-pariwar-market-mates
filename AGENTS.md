@@ -10,5 +10,5 @@
 <!-- LOVABLE:END -->
 
 ## Project rules
-- Sign-in and roles are demo-only (src/lib/session.tsx, localStorage); exactly two roles, manufacturer and retailer, and role checks go through resolveRole so a user never activates a role they lack. Why: frontend prototype; swap for real auth later without changing the dashboards.
+- Sign-in uses Supabase Google OAuth; the Supabase session is the sole authentication source. Exactly two app roles exist, manufacturer and retailer; profile rows determine available roles, and role checks go through resolveRole so a user never activates a role they lack. Browser storage may retain only the active-role preference.
 - Each dashboard is a layout route (retailer.tsx, manufacturer.tsx) wrapping AppShell with ssr:false. Why: session lives in the browser.

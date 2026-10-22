@@ -1,8 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PageHeader } from "@/components/AppShell";
 import { Panel } from "@/components/shared";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { ProfileSettings } from "@/components/ProfileSettings";
 import { Switch } from "@/components/ui/switch";
 
 export const Route = createFileRoute("/manufacturer/settings")({ component: Page });
@@ -18,19 +17,19 @@ const ALERTS = [
 function Page() {
   return (
     <>
-      <PageHeader title="Notifications & Settings" />
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Panel title="Account">
-          <div className="space-y-4">
-            <div className="space-y-1.5"><Label>Company</Label><Input defaultValue="Jyoti Appliances Ltd." /></div>
-            <div className="space-y-1.5"><Label>Email</Label><Input defaultValue="marketing@jyotiappliances.com" /></div>
-            <div className="space-y-1.5"><Label>Language</Label><Input defaultValue="English, हिन्दी" /></div>
-          </div>
-        </Panel>
+      <ProfileSettings />
+      <div className="mt-6">
+        <PageHeader
+          title="Notification preferences"
+          desc="Prototype preferences are not saved between sessions."
+        />
         <Panel title="Email alerts">
           <ul className="space-y-4">
             {ALERTS.map(([l, on]) => (
-              <li key={l} className="flex items-center justify-between gap-4 text-sm"><span>{l}</span><Switch defaultChecked={on} /></li>
+              <li key={l} className="flex items-center justify-between gap-4 text-sm">
+                <span>{l}</span>
+                <Switch defaultChecked={on} />
+              </li>
             ))}
           </ul>
         </Panel>

@@ -68,7 +68,11 @@ export function AppShell({ role, items, children }: { role: Role; items: NavItem
 
   if (!ready) return <div className="min-h-screen bg-background" />;
   if (!user) return <Navigate to="/login" replace />;
-  if (!user.roles.includes(role)) return <Navigate to={activeRole === "manufacturer" ? "/manufacturer" : "/retailer"} replace />;
+  if (!user.roles.length) return <Navigate to="/register" replace />;
+  if (!user.roles.includes(role)) {
+    if (!activeRole) return <Navigate to="/register" replace />;
+    return <Navigate to={activeRole === "manufacturer" ? "/manufacturer" : "/retailer"} replace />;
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -101,7 +105,16 @@ export function AppShell({ role, items, children }: { role: Role; items: NavItem
             <RoleMenu />
           </div>
         </header>
-        <main className="mx-auto max-w-[1400px] px-4 py-6 sm:px-6">{children}</main>
+        <main className="mx-auto max-w-[1400px] px-4 py-6 sm:px-6">
+          <p
+            role="status"
+            className="mb-5 rounded-lg border border-gold/40 bg-gold/10 px-4 py-3 text-sm text-foreground"
+          >
+            Prototype data: templates, campaigns, analytics, retailer networks, Brand Kits,
+            settings, and creative downloads are sample or local-only and are not saved to Supabase.
+          </p>
+          {children}
+        </main>
       </div>
     </div>
   );

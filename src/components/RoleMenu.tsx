@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import { Check, ChevronDown, Factory, LogOut, Store } from "lucide-react";
+import { Check, ChevronDown, Factory, LogOut, Store, UserPlus } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,7 +14,7 @@ import { toast } from "sonner";
 const ICON: Record<Role, typeof Store> = { manufacturer: Factory, retailer: Store };
 
 export function RoleMenu() {
-  const { user, activeRole, switchRole, signOut } = useSession();
+  const { user, activeRole, authUser, switchRole, signOut } = useSession();
   const navigate = useNavigate();
   if (!user || !activeRole) return null;
 
@@ -29,9 +29,13 @@ export function RoleMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="flex min-w-0 items-center gap-2 rounded-full py-1 pl-1 pr-2 outline-none transition hover:bg-muted">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-primary text-xs font-bold text-primary-foreground">
-          {user.initials}
-        </span>
+        {user.avatarUrl ? (
+          <img src={user.avatarUrl} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" />
+        ) : (
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-primary text-xs font-bold text-primary-foreground">
+            {user.initials}
+          </span>
+        )}
         <span className="hidden min-w-0 text-left sm:block">
           <span className="block truncate text-sm font-semibold">{user.business}</span>
           <span className="block text-xs text-primary">{ROLE_LABEL[activeRole]}</span>
@@ -57,12 +61,26 @@ export function RoleMenu() {
             </DropdownMenuItem>
           );
         })}
+        {authUser && user.roles.length < 2 && (
+          <DropdownMenuItem
+            onClick={() => navigate({ to: "/register", search: { addRole: true } })}
+            className="gap-2"
+          >
+            <UserPlus className="h-4 w-4" /> Add another role
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem
           className="gap-2"
-          onClick={() => {
-            signOut();
-            navigate({ to: "/login", replace: true });
+          onClick={async () => {
+            try {
+              await signOut();
+              navigate({ to: "/login", replace: true });
+            } catch (error) {
+              toast.error(
+                error instanceof Error ? error.message : "Sign-out failed. Please try again.",
+              );
+            }
           }}
         >
           <LogOut className="h-4 w-4" /> Sign out

@@ -1,113 +1,337 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+import type { User as AuthUser } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabase";
 
 export type Role = "manufacturer" | "retailer";
 
-export interface DemoUser {
+export interface UserProfile {
+  user_id: string;
+  role: Role;
+  full_name: string;
+  email: string;
+  country: string;
+  state: string;
+  city: string;
+  business_name: string;
+  business_logo_path: string;
+  profile_photo_path: string;
+  category: string;
+  contact_number: string;
+  accepted_policies: boolean;
+  terms_accepted_at: string;
+  created_at: string;
+  businessLogoUrl?: string;
+  profilePhotoUrl?: string;
+  assetError?: string;
+}
+
+export interface AppUser {
   id: string;
   name: string;
   business: string;
   email: string;
   roles: Role[];
   initials: string;
+  avatarUrl?: string;
 }
 
-export const DEMO_USERS: DemoUser[] = [
-  {
-    id: "u1",
-    name: "Rakesh Sharma",
-    business: "Sharma Electronics",
-    email: "rakesh@sharmaelectronics.in",
-    roles: ["manufacturer", "retailer"],
-    initials: "SE",
-  },
-  {
-    id: "u2",
-    name: "Anita Mehra",
-    business: "Mehra Home Store",
-    email: "anita@mehrahome.in",
-    roles: ["retailer"],
-    initials: "MH",
-  },
-  {
-    id: "u3",
-    name: "Vikram Joshi",
-    business: "Jyoti Appliances Ltd.",
-    email: "vikram@jyotiappliances.com",
-    roles: ["manufacturer"],
-    initials: "JA",
-  },
-];
+export const ROLE_LABEL: Record<Role, string> = {
+  manufacturer: "Manufacturer",
+  retailer: "Retailer",
+};
+const SESSION_KEY = "pp-role-preference";
+const PROFILE_COLUMNS =
+  "user_id, role, full_name, email, country, state, city, business_name, business_logo_path, profile_photo_path, category, contact_number, accepted_policies, terms_accepted_at, created_at";
 
-export const ROLE_LABEL: Record<Role, string> = { manufacturer: "Manufacturer", retailer: "Retailer" };
+/** Returns only a role present in the authenticated user's profile set. */
+export function resolveRole(roles: Role[], requested?: Role | null): Role | null {
+  if (requested && roles.includes(requested)) return requested;
+  return roles[0] ?? null;
+}
 
-/** Returns the role to activate; never returns a role the user does not hold. */
-export function resolveRole(user: DemoUser, requested?: Role | null): Role {
-  if (requested && user.roles.includes(requested)) return requested;
-  return user.roles[0] ?? "retailer";
+interface LoadedAccount {
+  user: AppUser;
+  profiles: UserProfile[];
+  activeRole: Role | null;
+  activeProfile: UserProfile | null;
 }
 
 interface SessionState {
   ready: boolean;
-  user: DemoUser | null;
+  user: AppUser | null;
   activeRole: Role | null;
-  signIn: (userId: string, role?: Role) => Role;
+  activeProfile: UserProfile | null;
+  authUser: AuthUser | null;
+  sessionError: string;
+  refreshAuthUser: (preferredRole?: Role) => Promise<void>;
   switchRole: (role: Role) => boolean;
-  signOut: () => void;
+  signOut: () => Promise<void>;
 }
 
 const Ctx = createContext<SessionState | null>(null);
-const KEY = "pp-session";
+
+function saveRolePreference(userId: string, role: Role) {
+  try {
+    localStorage.setItem(SESSION_KEY, JSON.stringify({ userId, role }));
+  } catch {
+    // Session persistence belongs to Supabase; role preference is optional.
+  }
+}
+
+function readRolePreference(userId: string): Role | null {
+  try {
+    const value = JSON.parse(localStorage.getItem(SESSION_KEY) ?? "null") as {
+      userId?: string;
+      role?: Role;
+    } | null;
+    if (value?.userId === userId && (value.role === "manufacturer" || value.role === "retailer"))
+      return value.role;
+  } catch {
+    // Ignore malformed or unavailable browser storage.
+  }
+  return null;
+}
+
+async function loadAccount(
+  authUser: AuthUser,
+  requestedRole?: Role | null,
+): Promise<LoadedAccount> {
+  const client = supabase;
+  if (!client) throw new Error("Supabase is not configured. Check the local environment settings.");
+
+  const { data, error } = await client
+    .from("user_profiles")
+    .select(PROFILE_COLUMNS)
+    .eq("user_id", authUser.id);
+  if (error) throw new Error("We couldn't load your business profile. Please try again.");
+
+  const profiles = await Promise.all(
+    (data ?? [])
+      .filter(
+        (profile): profile is typeof profile & { role: Role } =>
+          profile.role === "manufacturer" || profile.role === "retailer",
+      )
+      .map(async (row) => {
+        const profile = row as unknown as UserProfile;
+        let businessLogoUrl: string | undefined;
+        let profilePhotoUrl: string | undefined;
+        const assetErrors: string[] = [];
+        for (const [path, field] of [
+          [profile.business_logo_path, "businessLogoUrl"],
+          [profile.profile_photo_path, "profilePhotoUrl"],
+        ] as const) {
+          if (!path) continue;
+          const { data: signed, error: signedError } = await client.storage
+            .from("profile-assets")
+            .createSignedUrl(path, 3600);
+          if (signedError) assetErrors.push("A private profile image could not be loaded.");
+          else if (field === "businessLogoUrl") businessLogoUrl = signed.signedUrl;
+          else profilePhotoUrl = signed.signedUrl;
+        }
+        return {
+          ...profile,
+          ...(businessLogoUrl ? { businessLogoUrl } : {}),
+          ...(profilePhotoUrl ? { profilePhotoUrl } : {}),
+          ...(assetErrors.length ? { assetError: assetErrors[0] } : {}),
+        };
+      }),
+  );
+  const roles = [...new Set(profiles.map((profile) => profile.role))];
+  const activeRole = resolveRole(roles, requestedRole ?? readRolePreference(authUser.id));
+  const activeProfile = profiles.find((profile) => profile.role === activeRole) ?? null;
+  const name =
+    activeProfile?.full_name ??
+    String(
+      authUser.user_metadata["full_name"] ??
+        authUser.user_metadata["name"] ??
+        authUser.email ??
+        "New user",
+    );
+  const initials = name
+    .split(/\s+/)
+    .map((part) => part[0] ?? "")
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+  const user: AppUser = {
+    id: authUser.id,
+    name,
+    business: activeProfile?.business_name ?? name,
+    email: authUser.email ?? "",
+    roles,
+    initials,
+    ...(activeProfile?.profilePhotoUrl ? { avatarUrl: activeProfile.profilePhotoUrl } : {}),
+  };
+  return { user, profiles, activeRole, activeProfile };
+}
 
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
-  const [user, setUser] = useState<DemoUser | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
   const [activeRole, setActiveRole] = useState<Role | null>(null);
+  const [activeProfile, setActiveProfile] = useState<UserProfile | null>(null);
+  const [profiles, setProfiles] = useState<UserProfile[]>([]);
+  const [authUser, setAuthUser] = useState<AuthUser | null>(null);
+  const [sessionError, setSessionError] = useState("");
 
   useEffect(() => {
+    let mounted = true;
+    let generation = 0;
     try {
-      const raw = localStorage.getItem(KEY);
-      if (raw) {
-        const { userId, role } = JSON.parse(raw);
-        const u = DEMO_USERS.find((x) => x.id === userId);
-        if (u) {
-          setUser(u);
-          setActiveRole(resolveRole(u, role));
-        }
-      }
+      localStorage.removeItem("pp-session");
     } catch {
-      /* ignore */
+      // Ignore unavailable browser storage; Supabase remains the only auth source.
     }
-    setReady(true);
+    const sync = async (authenticatedUser: AuthUser | null) => {
+      const currentGeneration = ++generation;
+      if (!mounted) return;
+      setAuthUser(authenticatedUser);
+      setSessionError("");
+      if (!authenticatedUser) {
+        setUser(null);
+        setProfiles([]);
+        setActiveProfile(null);
+        setActiveRole(null);
+        setReady(true);
+        return;
+      }
+
+      setReady(false);
+      try {
+        const account = await loadAccount(authenticatedUser);
+        if (!mounted || currentGeneration !== generation) return;
+        setUser(account.user);
+        setProfiles(account.profiles);
+        setActiveProfile(account.activeProfile);
+        setActiveRole(account.activeRole);
+        if (account.activeRole) saveRolePreference(authenticatedUser.id, account.activeRole);
+      } catch (error) {
+        if (!mounted || currentGeneration !== generation) return;
+        setSessionError(
+          error instanceof Error
+            ? error.message
+            : "We couldn't load your account. Please try again.",
+        );
+        setUser(null);
+        setProfiles([]);
+        setActiveProfile(null);
+        setActiveRole(null);
+      } finally {
+        if (mounted && currentGeneration === generation) setReady(true);
+      }
+    };
+
+    if (!supabase) {
+      setReady(true);
+      return () => {
+        mounted = false;
+      };
+    }
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      window.setTimeout(() => {
+        void sync(session?.user ?? null);
+      }, 0);
+    });
+    void supabase.auth
+      .getSession()
+      .then(({ data, error }) => {
+        if (error) throw error;
+        return sync(data.session?.user ?? null);
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setSessionError("We couldn't restore your sign-in session. Please sign in again.");
+        setReady(true);
+      });
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
-  const persist = (userId: string, role: Role) => localStorage.setItem(KEY, JSON.stringify({ userId, role }));
-
-  const signIn = useCallback((userId: string, role?: Role) => {
-    const u = DEMO_USERS.find((x) => x.id === userId)!;
-    const r = resolveRole(u, role);
-    setUser(u);
-    setActiveRole(r);
-    persist(u.id, r);
-    return r;
-  }, []);
+  const refreshAuthUser = useCallback(
+    async (preferredRole?: Role) => {
+      if (!supabase)
+        throw new Error("Supabase is not configured. Check the local environment settings.");
+      const { data, error } = await supabase.auth.getUser();
+      if (error || !data.user)
+        throw new Error("Your sign-in session expired. Please sign in again.");
+      const account = await loadAccount(data.user, preferredRole ?? activeRole);
+      setAuthUser(data.user);
+      setUser(account.user);
+      setProfiles(account.profiles);
+      setActiveProfile(account.activeProfile);
+      setActiveRole(account.activeRole);
+      setSessionError("");
+      if (account.activeRole) saveRolePreference(data.user.id, account.activeRole);
+    },
+    [activeRole],
+  );
 
   const switchRole = useCallback(
     (role: Role) => {
       if (!user || !user.roles.includes(role)) return false;
+      const profile = profiles.find((item) => item.role === role) ?? null;
+      const name = profile?.full_name ?? user.name;
       setActiveRole(role);
-      persist(user.id, role);
+      setActiveProfile(profile);
+      const updatedUser: AppUser = {
+        ...user,
+        name,
+        business: profile?.business_name ?? name,
+        initials: name
+          .split(/\s+/)
+          .map((part) => part[0] ?? "")
+          .join("")
+          .slice(0, 2)
+          .toUpperCase(),
+      };
+      if (profile?.profilePhotoUrl) updatedUser.avatarUrl = profile.profilePhotoUrl;
+      else delete updatedUser.avatarUrl;
+      setUser(updatedUser);
+      saveRolePreference(user.id, role);
       return true;
     },
-    [user],
+    [profiles, user],
   );
 
-  const signOut = useCallback(() => {
-    localStorage.removeItem(KEY);
+  const signOut = useCallback(async () => {
+    if (supabase) {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw new Error("Sign-out failed. Please try again.");
+    }
+    try {
+      localStorage.removeItem(SESSION_KEY);
+    } catch {
+      // A signed-out Supabase session cannot be restored from this preference.
+    }
     setUser(null);
+    setProfiles([]);
+    setActiveProfile(null);
     setActiveRole(null);
+    setAuthUser(null);
   }, []);
 
-  return <Ctx.Provider value={{ ready, user, activeRole, signIn, switchRole, signOut }}>{children}</Ctx.Provider>;
+  return (
+    <Ctx.Provider
+      value={{
+        ready,
+        user,
+        activeRole,
+        activeProfile,
+        authUser,
+        sessionError,
+        refreshAuthUser,
+        switchRole,
+        signOut,
+      }}
+    >
+      {children}
+    </Ctx.Provider>
+  );
 }
 
 export function useSession() {

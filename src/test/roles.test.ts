@@ -1,16 +1,19 @@
 import { describe, expect, it } from "vitest";
-import { DEMO_USERS, resolveRole } from "@/lib/session";
+import { resolveRole, type Role } from "@/lib/session";
 
 describe("role resolution", () => {
-  it("lets a dual-role user activate retailer", () => {
-    expect(resolveRole(DEMO_USERS[0]!, "retailer")).toBe("retailer");
+  const dualRole: Role[] = ["manufacturer", "retailer"];
+
+  it("lets an authenticated dual-role user activate either registered role", () => {
+    expect(resolveRole(dualRole, "retailer")).toBe("retailer");
+    expect(resolveRole(dualRole, "manufacturer")).toBe("manufacturer");
   });
-  it("never activates a role the user lacks", () => {
-    const retailerOnly = DEMO_USERS.find((u) => u.id === "u2")!;
-    expect(resolveRole(retailerOnly, "manufacturer")).toBe("retailer");
+
+  it("never activates a role absent from the authenticated profile set", () => {
+    expect(resolveRole(["retailer"], "manufacturer")).toBe("retailer");
   });
-  it("only two roles exist across users", () => {
-    const all = new Set(DEMO_USERS.flatMap((u) => u.roles));
-    expect([...all].sort()).toEqual(["manufacturer", "retailer"]);
+
+  it("has no active role until the user has a profile", () => {
+    expect(resolveRole([], "manufacturer")).toBeNull();
   });
 });

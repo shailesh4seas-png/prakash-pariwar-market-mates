@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ManufacturerRouteImport } from './routes/manufacturer'
+import { Route as RegisterRouteImport } from './routes/register'
 import { Route as RetailerRouteImport } from './routes/retailer'
 import { Route as ManufacturerIndexRouteImport } from './routes/manufacturer.index'
 import { Route as ManufacturerAnalyticsRouteImport } from './routes/manufacturer.analytics'
@@ -43,6 +44,11 @@ const LoginRoute = LoginRouteImport.update({
 const ManufacturerRoute = ManufacturerRouteImport.update({
   id: '/manufacturer',
   path: '/manufacturer',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RetailerRoute = RetailerRouteImport.update({
@@ -135,6 +141,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/manufacturer': typeof ManufacturerRouteWithChildren
+  '/register': typeof RegisterRoute
   '/retailer': typeof RetailerRouteWithChildren
   '/manufacturer/analytics': typeof ManufacturerAnalyticsRoute
   '/manufacturer/brand': typeof ManufacturerBrandRoute
@@ -156,6 +163,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
   '/manufacturer/analytics': typeof ManufacturerAnalyticsRoute
   '/manufacturer/brand': typeof ManufacturerBrandRoute
   '/manufacturer/campaigns': typeof ManufacturerCampaignsRoute
@@ -178,6 +186,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/manufacturer': typeof ManufacturerRouteWithChildren
+  '/register': typeof RegisterRoute
   '/retailer': typeof RetailerRouteWithChildren
   '/manufacturer/analytics': typeof ManufacturerAnalyticsRoute
   '/manufacturer/brand': typeof ManufacturerBrandRoute
@@ -202,6 +211,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/manufacturer'
+    | '/register'
     | '/retailer'
     | '/manufacturer/analytics'
     | '/manufacturer/brand'
@@ -223,6 +233,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/register'
     | '/manufacturer/analytics'
     | '/manufacturer/brand'
     | '/manufacturer/campaigns'
@@ -244,6 +255,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/manufacturer'
+    | '/register'
     | '/retailer'
     | '/manufacturer/analytics'
     | '/manufacturer/brand'
@@ -267,6 +279,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
   ManufacturerRoute: typeof ManufacturerRouteWithChildren
+  RegisterRoute: typeof RegisterRoute
   RetailerRoute: typeof RetailerRouteWithChildren
 }
 
@@ -291,6 +304,13 @@ declare module '@tanstack/react-router' {
       path: '/manufacturer'
       fullPath: '/manufacturer'
       preLoaderRoute: typeof ManufacturerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/retailer': {
@@ -471,6 +491,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
   ManufacturerRoute: ManufacturerRouteWithChildren,
+  RegisterRoute: RegisterRoute,
   RetailerRoute: RetailerRouteWithChildren,
 }
 export const routeTree = rootRouteImport
