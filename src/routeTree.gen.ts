@@ -12,6 +12,13 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RetailerRouteImport } from './routes/retailer'
 import { Route as RetailerIndexRouteImport } from './routes/retailer.index'
+import { Route as RetailerBrandKitRouteImport } from './routes/retailer.brand-kit'
+import { Route as RetailerCalendarRouteImport } from './routes/retailer.calendar'
+import { Route as RetailerCampaignsRouteImport } from './routes/retailer.campaigns'
+import { Route as RetailerCreativesRouteImport } from './routes/retailer.creatives'
+import { Route as RetailerHelpRouteImport } from './routes/retailer.help'
+import { Route as RetailerProfileRouteImport } from './routes/retailer.profile'
+import { Route as RetailerTemplatesRouteImport } from './routes/retailer.templates'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -28,28 +35,114 @@ const RetailerIndexRoute = RetailerIndexRouteImport.update({
   path: '/',
   getParentRoute: () => RetailerRoute,
 } as any)
+const RetailerBrandKitRoute = RetailerBrandKitRouteImport.update({
+  id: '/brand-kit',
+  path: '/brand-kit',
+  getParentRoute: () => RetailerRoute,
+} as any)
+const RetailerCalendarRoute = RetailerCalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
+  getParentRoute: () => RetailerRoute,
+} as any)
+const RetailerCampaignsRoute = RetailerCampaignsRouteImport.update({
+  id: '/campaigns',
+  path: '/campaigns',
+  getParentRoute: () => RetailerRoute,
+} as any)
+const RetailerCreativesRoute = RetailerCreativesRouteImport.update({
+  id: '/creatives',
+  path: '/creatives',
+  getParentRoute: () => RetailerRoute,
+} as any)
+const RetailerHelpRoute = RetailerHelpRouteImport.update({
+  id: '/help',
+  path: '/help',
+  getParentRoute: () => RetailerRoute,
+} as any)
+const RetailerProfileRoute = RetailerProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => RetailerRoute,
+} as any)
+const RetailerTemplatesRoute = RetailerTemplatesRouteImport.update({
+  id: '/templates',
+  path: '/templates',
+  getParentRoute: () => RetailerRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/retailer': typeof RetailerRouteWithChildren
+  '/retailer/brand-kit': typeof RetailerBrandKitRoute
+  '/retailer/calendar': typeof RetailerCalendarRoute
+  '/retailer/campaigns': typeof RetailerCampaignsRoute
+  '/retailer/creatives': typeof RetailerCreativesRoute
+  '/retailer/help': typeof RetailerHelpRoute
+  '/retailer/profile': typeof RetailerProfileRoute
+  '/retailer/templates': typeof RetailerTemplatesRoute
   '/retailer/': typeof RetailerIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/retailer/brand-kit': typeof RetailerBrandKitRoute
+  '/retailer/calendar': typeof RetailerCalendarRoute
+  '/retailer/campaigns': typeof RetailerCampaignsRoute
+  '/retailer/creatives': typeof RetailerCreativesRoute
+  '/retailer/help': typeof RetailerHelpRoute
+  '/retailer/profile': typeof RetailerProfileRoute
+  '/retailer/templates': typeof RetailerTemplatesRoute
   '/retailer': typeof RetailerIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/retailer': typeof RetailerRouteWithChildren
+  '/retailer/brand-kit': typeof RetailerBrandKitRoute
+  '/retailer/calendar': typeof RetailerCalendarRoute
+  '/retailer/campaigns': typeof RetailerCampaignsRoute
+  '/retailer/creatives': typeof RetailerCreativesRoute
+  '/retailer/help': typeof RetailerHelpRoute
+  '/retailer/profile': typeof RetailerProfileRoute
+  '/retailer/templates': typeof RetailerTemplatesRoute
   '/retailer/': typeof RetailerIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/retailer' | '/retailer/'
+  fullPaths:
+    | '/'
+    | '/retailer'
+    | '/retailer/brand-kit'
+    | '/retailer/calendar'
+    | '/retailer/campaigns'
+    | '/retailer/creatives'
+    | '/retailer/help'
+    | '/retailer/profile'
+    | '/retailer/templates'
+    | '/retailer/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/retailer'
-  id: '__root__' | '/' | '/retailer' | '/retailer/'
+  to:
+    | '/'
+    | '/retailer/brand-kit'
+    | '/retailer/calendar'
+    | '/retailer/campaigns'
+    | '/retailer/creatives'
+    | '/retailer/help'
+    | '/retailer/profile'
+    | '/retailer/templates'
+    | '/retailer'
+  id:
+    | '__root__'
+    | '/'
+    | '/retailer'
+    | '/retailer/brand-kit'
+    | '/retailer/calendar'
+    | '/retailer/campaigns'
+    | '/retailer/creatives'
+    | '/retailer/help'
+    | '/retailer/profile'
+    | '/retailer/templates'
+    | '/retailer/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -80,14 +173,77 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RetailerIndexRouteImport
       parentRoute: typeof RetailerRoute
     }
+    '/retailer/brand-kit': {
+      id: '/retailer/brand-kit'
+      path: '/brand-kit'
+      fullPath: '/retailer/brand-kit'
+      preLoaderRoute: typeof RetailerBrandKitRouteImport
+      parentRoute: typeof RetailerRoute
+    }
+    '/retailer/calendar': {
+      id: '/retailer/calendar'
+      path: '/calendar'
+      fullPath: '/retailer/calendar'
+      preLoaderRoute: typeof RetailerCalendarRouteImport
+      parentRoute: typeof RetailerRoute
+    }
+    '/retailer/campaigns': {
+      id: '/retailer/campaigns'
+      path: '/campaigns'
+      fullPath: '/retailer/campaigns'
+      preLoaderRoute: typeof RetailerCampaignsRouteImport
+      parentRoute: typeof RetailerRoute
+    }
+    '/retailer/creatives': {
+      id: '/retailer/creatives'
+      path: '/creatives'
+      fullPath: '/retailer/creatives'
+      preLoaderRoute: typeof RetailerCreativesRouteImport
+      parentRoute: typeof RetailerRoute
+    }
+    '/retailer/help': {
+      id: '/retailer/help'
+      path: '/help'
+      fullPath: '/retailer/help'
+      preLoaderRoute: typeof RetailerHelpRouteImport
+      parentRoute: typeof RetailerRoute
+    }
+    '/retailer/profile': {
+      id: '/retailer/profile'
+      path: '/profile'
+      fullPath: '/retailer/profile'
+      preLoaderRoute: typeof RetailerProfileRouteImport
+      parentRoute: typeof RetailerRoute
+    }
+    '/retailer/templates': {
+      id: '/retailer/templates'
+      path: '/templates'
+      fullPath: '/retailer/templates'
+      preLoaderRoute: typeof RetailerTemplatesRouteImport
+      parentRoute: typeof RetailerRoute
+    }
   }
 }
 
 interface RetailerRouteChildren {
+  RetailerBrandKitRoute: typeof RetailerBrandKitRoute
+  RetailerCalendarRoute: typeof RetailerCalendarRoute
+  RetailerCampaignsRoute: typeof RetailerCampaignsRoute
+  RetailerCreativesRoute: typeof RetailerCreativesRoute
+  RetailerHelpRoute: typeof RetailerHelpRoute
+  RetailerProfileRoute: typeof RetailerProfileRoute
+  RetailerTemplatesRoute: typeof RetailerTemplatesRoute
   RetailerIndexRoute: typeof RetailerIndexRoute
 }
 
 const RetailerRouteChildren: RetailerRouteChildren = {
+  RetailerBrandKitRoute: RetailerBrandKitRoute,
+  RetailerCalendarRoute: RetailerCalendarRoute,
+  RetailerCampaignsRoute: RetailerCampaignsRoute,
+  RetailerCreativesRoute: RetailerCreativesRoute,
+  RetailerHelpRoute: RetailerHelpRoute,
+  RetailerProfileRoute: RetailerProfileRoute,
+  RetailerTemplatesRoute: RetailerTemplatesRoute,
   RetailerIndexRoute: RetailerIndexRoute,
 }
 
