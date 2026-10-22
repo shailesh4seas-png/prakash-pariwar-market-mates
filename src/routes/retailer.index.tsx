@@ -152,7 +152,7 @@ function RetailerHome() {
         </div>
         <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto">
           {["Diwali", "Dhanteras", "Wedding Season", "Smart TV", "Kitchen", "Exchange Offer"].map((s) => (
-            <button key={s} onClick={() => setQ(s === "Diwali" ? "Diwali" : s.split(" ")[0])} className="shrink-0 rounded-full bg-accent px-3 py-1.5 text-xs font-medium text-accent-foreground hover:bg-primary hover:text-primary-foreground">
+            <button key={s} onClick={() => setQ(s.split(" ")[0] ?? s)} className="shrink-0 rounded-full bg-accent px-3 py-1.5 text-xs font-medium text-accent-foreground hover:bg-primary hover:text-primary-foreground">
               {s}
             </button>
           ))}
@@ -176,7 +176,7 @@ function RetailerHome() {
         </div>
         <div className="grid grid-cols-4 gap-3 sm:grid-cols-8">
           {CATEGORIES.map((c) => {
-            const Icon = CAT_ICON[c];
+            const Icon = CAT_ICON[c] ?? LayoutGrid;
             const active = cat === c;
             return (
               <button

@@ -13,7 +13,7 @@ import { CATEGORIES, TEMPLATES } from "@/lib/data";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/manufacturer/editor")({
-  validateSearch: (s: Record<string, unknown>): { id?: string } => ({ id: typeof s["id"] === "string" ? s["id"] : undefined }),
+  validateSearch: (s: Record<string, unknown>): { id?: string | undefined } => ({ id: typeof s["id"] === "string" ? s["id"] : undefined }),
   component: Page,
 });
 

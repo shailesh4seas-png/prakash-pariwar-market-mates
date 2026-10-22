@@ -3,7 +3,7 @@ import { DEMO_USERS, resolveRole } from "@/lib/session";
 
 describe("role resolution", () => {
   it("lets a dual-role user activate retailer", () => {
-    expect(resolveRole(DEMO_USERS[0], "retailer")).toBe("retailer");
+    expect(resolveRole(DEMO_USERS[0]!, "retailer")).toBe("retailer");
   });
   it("never activates a role the user lacks", () => {
     const retailerOnly = DEMO_USERS.find((u) => u.id === "u2")!;
