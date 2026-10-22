@@ -1,4 +1,4 @@
-import { Link, Navigate, useRouterState } from "@tanstack/react-router";
+import { Link, Navigate, useRouterState, type LinkProps } from "@tanstack/react-router";
 import { Bell, Menu, Search, Sparkles, type LucideIcon } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { Logo } from "@/components/Logo";
@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 
 export interface NavItem {
   label: string;
-  to: string;
+  to: NonNullable<LinkProps["to"]>;
   icon: LucideIcon;
   exact?: boolean;
 }
@@ -26,7 +26,7 @@ function SidebarBody({ items, role, onNav }: { items: NavItem[]; role: Role; onN
       </span>
       <nav className="mt-6 space-y-1">
         {items.map((it) => {
-          const active = it.exact ? path === it.to : path === it.to || path.startsWith(it.to + "/");
+          const active = it.exact ? path === it.to : path === it.to || path.startsWith(String(it.to) + "/");
           return (
             <Link
               key={it.to}
