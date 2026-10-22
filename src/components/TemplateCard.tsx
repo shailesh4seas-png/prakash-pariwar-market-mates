@@ -34,7 +34,7 @@ export function TemplateCard({
   className?: string;
 }) {
   return (
-    <div className={cn("group w-44 shrink-0 sm:w-48", className)}>
+    <div className={cn("group relative w-44 shrink-0 sm:w-48", className)}>
       <button
         onClick={() => onOpen?.(t)}
         className="block w-full rounded-2xl bg-card p-1.5 text-left shadow-card transition hover:-translate-y-1 hover:shadow-glow"
@@ -49,7 +49,7 @@ export function TemplateCard({
         <button
           onClick={() => onToggleSave(t)}
           aria-label={saved ? "Remove from saved" : "Save template"}
-          className="relative -mt-12 ml-auto mr-3 flex h-8 w-8 items-center justify-center rounded-full bg-card text-primary shadow-card"
+          className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-card text-primary shadow-card"
         >
           <Bookmark className={cn("h-4 w-4", saved && "fill-current")} />
         </button>
