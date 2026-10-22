@@ -19,7 +19,7 @@ function Stat({ icon: Icon, label, value, note }: { icon: LucideIcon; label: str
   );
 }
 
-const ACTIVITY = [
+const ACTIVITY: [string, string, string][] = [
   ["Patel Digital World downloaded", "Diwali Offer", "12 min ago"],
   ["You published", "Republic Day", "2 h ago"],
   ["Reddy Electronics joined your network", "", "Yesterday"],
@@ -41,7 +41,7 @@ function Overview() {
           <p className="font-display text-sm font-semibold uppercase tracking-wider text-gold">Namaste, Jyoti Appliances</p>
           <h1 className="mt-2 max-w-lg text-2xl font-extrabold text-primary-foreground sm:text-4xl">Diwali is 17 days away. Your retailers are ready.</h1>
           <div className="mt-5 flex flex-wrap gap-3">
-            <Link to="/manufacturer/editor" className="flex items-center gap-2 rounded-xl bg-card px-4 py-2.5 text-sm font-semibold text-foreground"><Plus className="h-4 w-4" /> New template</Link>
+            <Link to="/manufacturer/editor" search={{}} className="flex items-center gap-2 rounded-xl bg-card px-4 py-2.5 text-sm font-semibold text-foreground"><Plus className="h-4 w-4" /> New template</Link>
             <Link to="/manufacturer/retailers" className="flex items-center gap-2 rounded-xl border border-primary-foreground/30 px-4 py-2.5 text-sm font-semibold text-primary-foreground">Invite retailers</Link>
           </div>
         </div>

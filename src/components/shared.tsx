@@ -68,9 +68,9 @@ export function CalendarView() {
         ))}
       </div>
       <div className="mt-4 flex flex-wrap gap-3 text-xs">
-        <span className={cn("rounded px-2 py-0.5", EVT.festival)}>Festival</span>
-        <span className={cn("rounded px-2 py-0.5", EVT.launch)}>Product launch</span>
-        <span className={cn("rounded px-2 py-0.5", EVT.post)}>Scheduled content</span>
+        <span className={cn("rounded px-2 py-0.5", EVT["festival"])}>Festival</span>
+        <span className={cn("rounded px-2 py-0.5", EVT["launch"])}>Product launch</span>
+        <span className={cn("rounded px-2 py-0.5", EVT["post"])}>Scheduled content</span>
       </div>
     </Panel>
   );

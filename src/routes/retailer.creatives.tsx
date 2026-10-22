@@ -15,7 +15,7 @@ function Page() {
       <PageHeader title="My Creatives" desc="Personalised creatives you've downloaded." />
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         {lib.downloads.map((d) => {
-          const t = byIds([d.id])[0];
+          const t = byIds([d.id])[0]!;
           return (
             <div key={d.id} className="rounded-2xl bg-card p-2 shadow-card">
               <TemplatePoster t={t} />

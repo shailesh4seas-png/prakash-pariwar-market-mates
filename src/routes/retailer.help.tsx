@@ -5,7 +5,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 
 export const Route = createFileRoute("/retailer/help")({ component: Page });
 
-const FAQ = [
+const FAQ: [string, string][] = [
   ["How do I add my store name to a template?", "Open any template, fill in your store name, phone and address, then download. Your Brand Kit pre-fills these fields."],
   ["Can I post directly to Instagram or WhatsApp?", "Download the creative in Post or Story format and share it from your phone."],
   ["Where do new templates come from?", "Manufacturers you're connected with publish templates for festivals and product launches."],

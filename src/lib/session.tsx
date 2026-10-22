@@ -43,7 +43,7 @@ export const ROLE_LABEL: Record<Role, string> = { manufacturer: "Manufacturer", 
 /** Returns the role to activate; never returns a role the user does not hold. */
 export function resolveRole(user: DemoUser, requested?: Role | null): Role {
   if (requested && user.roles.includes(requested)) return requested;
-  return user.roles[0];
+  return user.roles[0] ?? "retailer";
 }
 
 interface SessionState {

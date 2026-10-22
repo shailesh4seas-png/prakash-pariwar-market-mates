@@ -13,7 +13,7 @@ import { CATEGORIES, TEMPLATES } from "@/lib/data";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/manufacturer/editor")({
-  validateSearch: (s: Record<string, unknown>) => ({ id: typeof s.id === "string" ? s.id : undefined }),
+  validateSearch: (s: Record<string, unknown>): { id?: string } => ({ id: typeof s["id"] === "string" ? s["id"] : undefined }),
   component: Page,
 });
 
@@ -22,7 +22,7 @@ const MEDIA = Array.from(new Set(TEMPLATES.map((t) => t.image)));
 
 function Page() {
   const { id } = Route.useSearch();
-  const base = TEMPLATES.find((t) => t.id === id) ?? TEMPLATES[0];
+  const base = TEMPLATES.find((t) => t.id === id) ?? TEMPLATES[0]!;
   const navigate = useNavigate();
   const [title, setTitle] = useState(id ? base.title : "Untitled template");
   const [cat, setCat] = useState<string>(base.category);

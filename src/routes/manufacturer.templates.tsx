@@ -21,7 +21,7 @@ function Page() {
       <PageHeader
         title="Templates"
         desc="Create and manage creatives your retailers can brand."
-        action={<Link to="/manufacturer/editor" className="flex w-fit items-center gap-2 rounded-xl bg-gradient-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow"><Plus className="h-4 w-4" /> Create template</Link>}
+        action={<Link to="/manufacturer/editor" search={{}} className="flex w-fit items-center gap-2 rounded-xl bg-gradient-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow"><Plus className="h-4 w-4" /> Create template</Link>}
       />
       <div className="mb-6 flex flex-col gap-3 sm:flex-row">
         <div className="relative flex-1">

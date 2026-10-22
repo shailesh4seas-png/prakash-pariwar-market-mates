@@ -46,7 +46,7 @@ function Hero() {
     const id = setInterval(() => setI((x) => (x + 1) % SLIDES.length), 6000);
     return () => clearInterval(id);
   }, []);
-  const s = SLIDES[i];
+  const s = SLIDES[i]!;
   return (
     <section className="relative overflow-hidden rounded-3xl bg-gradient-festive shadow-glow">
       <img key={s.img} src={s.img} alt="" width={1792} height={768} className="absolute inset-0 h-full w-full animate-in fade-in object-cover duration-700" />
@@ -220,7 +220,7 @@ function RetailerHome() {
           <h3 className="flex items-center gap-2 font-bold"><Download className="h-5 w-5 text-primary" /> My Downloads</h3>
           <ul className="mt-4 divide-y">
             {lib.downloads.slice(0, 5).map((d) => {
-              const t = byIds([d.id])[0];
+              const t = byIds([d.id])[0]!;
               return (
                 <li key={d.id} className="flex items-center gap-3 py-2.5">
                   <img src={t.image} alt="" loading="lazy" className="h-11 w-11 shrink-0 rounded-lg object-cover" />

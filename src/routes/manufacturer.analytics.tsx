@@ -15,7 +15,7 @@ const ADOPTION = [
 
 function Page() {
   const top = [...TEMPLATES].sort((a, b) => b.uses - a.uses).slice(0, 5);
-  const max = top[0].uses;
+  const max = top[0]?.uses ?? 1;
   return (
     <>
       <PageHeader title="Analytics" desc="How retailers are using your creatives." />
