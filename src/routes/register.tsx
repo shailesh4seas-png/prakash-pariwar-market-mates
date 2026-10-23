@@ -1,4 +1,4 @@
-import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, ArrowRight, Check, ImagePlus, LoaderCircle } from "lucide-react";
 import { Logo } from "@/components/Logo";
@@ -18,6 +18,8 @@ export const Route = createFileRoute("/register")({
     ...(typeof search["error_description"] === "string"
       ? { oauthErrorDescription: search["error_description"] }
       : {}),
+    ...(typeof search["invite"] === "string" ? { invite: search["invite"] } : {}),
+    ...(typeof search["referral"] === "string" ? { referral: search["referral"] } : {}),
   }),
   head: () => ({
     meta: [{ title: "Register · Prakash Pariwar" }, { name: "robots", content: "noindex" }],
@@ -40,7 +42,13 @@ const INITIAL_VALUES: RegistrationValues = {
 };
 
 function Register() {
-  const { addRole = false, oauthError, oauthErrorDescription } = Route.useSearch();
+  const {
+    addRole = false,
+    oauthError,
+    oauthErrorDescription,
+    invite,
+    referral,
+  } = Route.useSearch();
   const { ready, user, authUser, activeRole, sessionError, refreshAuthUser } = useSession();
   const navigate = useNavigate();
   const [role, setRole] = useState<Role | null>(null);
@@ -48,6 +56,8 @@ function Register() {
   const [errors, setErrors] = useState<RegistrationErrors>({});
   const [saving, setSaving] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const handledAttribution = useRef("");
+  const attribution = invite && !referral ? { invite } : referral && !invite ? { referral } : null;
 
   const callbackError = oauthError
     ? oauthError === "access_denied"
@@ -65,16 +75,109 @@ function Register() {
   }, [authUser, user]);
 
   useEffect(() => {
-    if (!ready || !authUser || addRole || !user?.roles.length) return;
+    if (
+      !ready ||
+      !authUser ||
+      !user ||
+      !invite ||
+      referral ||
+      !user.roles.includes("retailer") ||
+      !supabase
+    )
+      return;
+    const key = `${authUser.id}:${invite}`;
+    if (handledAttribution.current === key) return;
+    handledAttribution.current = key;
+    void (async () => {
+      try {
+        const { error } = await supabase.rpc("associate_existing_retailer", {
+          p_invitation_token: invite,
+          p_referral_token: null,
+        });
+        if (error) throw error;
+        await refreshAuthUser("retailer");
+        await navigate({ to: "/retailer", replace: true });
+      } catch {
+        setSubmitError("This invitation is expired, revoked, already used, or invalid.");
+      }
+    })();
+  }, [authUser, invite, navigate, ready, referral, refreshAuthUser, user]);
+
+  useEffect(() => {
+    if (
+      !ready ||
+      !authUser ||
+      !user ||
+      !referral ||
+      invite ||
+      !user.roles.includes("retailer") ||
+      !supabase
+    )
+      return;
+    const key = `${authUser.id}:${referral}`;
+    if (handledAttribution.current === key) return;
+    handledAttribution.current = key;
+    void (async () => {
+      try {
+        const { error } = await supabase.rpc("associate_existing_retailer", {
+          p_invitation_token: null,
+          p_referral_token: referral,
+        });
+        if (error) throw error;
+        await refreshAuthUser("retailer");
+        await navigate({ to: "/retailer", replace: true });
+      } catch {
+        setSubmitError("This retailer registration link is invalid or could not be accepted.");
+      }
+    })();
+  }, [authUser, invite, navigate, ready, referral, refreshAuthUser, user]);
+
+  useEffect(() => {
+    if (!ready || !authUser || !invite || referral || !supabase) return;
+    let active = true;
+    void supabase
+      .rpc("get_retailer_invitation_context", { p_token: invite })
+      .then(({ data, error }) => {
+        if (!active) return;
+        if (error) {
+          setSubmitError("This invitation is expired, revoked, already used, or invalid.");
+          return;
+        }
+        const context = data as {
+          retailer_name: string;
+          mobile_number: string;
+          business_name: string;
+          city: string;
+        };
+        setValues((current) => ({
+          ...current,
+          name: current.name || context.retailer_name,
+          phone: current.phone || context.mobile_number,
+          business: current.business || context.business_name,
+          city: current.city || context.city,
+        }));
+      });
+    return () => {
+      active = false;
+    };
+  }, [authUser, invite, ready, referral]);
+
+  useEffect(() => {
+    if (!ready || !authUser || !user || (!invite && !referral) || (invite && referral)) return;
+    if (!user.roles.includes("retailer")) setRole("retailer");
+  }, [authUser, invite, ready, referral, user]);
+
+  useEffect(() => {
+    if (!ready || !authUser || addRole || invite || referral || !user?.roles.length) return;
     const targetRole = activeRole ?? user.roles[0]!;
     void navigate({
       to: targetRole === "manufacturer" ? "/manufacturer" : "/retailer",
       replace: true,
     });
-  }, [activeRole, addRole, authUser, navigate, ready, user]);
+  }, [activeRole, addRole, authUser, invite, navigate, ready, referral, user]);
 
   useEffect(() => {
-    if (!addRole || !user?.roles.length) return;
+    if (!addRole || invite || referral || !user?.roles.length) return;
     if (user.roles.length === 2) {
       const targetRole = user.roles.includes("retailer") ? "retailer" : "manufacturer";
       void navigate({
@@ -82,7 +185,7 @@ function Register() {
         replace: true,
       });
     }
-  }, [addRole, navigate, user]);
+  }, [addRole, invite, navigate, referral, user]);
 
   const update = (field: keyof RegistrationValues, value: string | boolean | File | null) => {
     setValues((current) => ({ ...current, [field]: value }));
@@ -92,6 +195,10 @@ function Register() {
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSubmitError("");
+    if (invite && referral) {
+      setSubmitError("This retailer link is invalid because it contains conflicting attribution.");
+      return;
+    }
     const client = supabase;
     if (!role || !authUser || !client) {
       setSubmitError(client ? "Sign in with Google before registering." : SUPABASE_SETUP_MESSAGE);
@@ -104,6 +211,8 @@ function Register() {
     setSaving(true);
     const uploadedPaths: string[] = [];
     let profileSaved = false;
+    let persistenceAttempted = false;
+    let persistenceResponded = false;
     try {
       const { data: verified, error: verifyError } = await client.auth.getUser();
       if (
@@ -132,23 +241,45 @@ function Register() {
       };
       const logoPath = await upload(values.businessLogo!, "business-logo");
       const photoPath = await upload(values.profilePhoto!, "profile-photo");
-      const { error } = await client.from("user_profiles").insert({
-        user_id: verified.user.id,
-        role,
-        full_name: values.name.trim(),
-        email: verified.user.email,
-        country: values.country.trim(),
-        state: values.state.trim(),
-        city: values.city.trim(),
-        business_name: values.business.trim(),
-        business_logo_path: logoPath,
-        profile_photo_path: photoPath,
-        category: values.category.trim(),
-        contact_number: values.phone.trim(),
-        accepted_policies: true,
-        terms_accepted_at: new Date().toISOString(),
-      });
-      if (error) throw error;
+      if ((invite && !referral) || (referral && !invite)) {
+        persistenceAttempted = true;
+        const { error } = await client.rpc("complete_retailer_registration", {
+          p_invitation_token: invite ?? null,
+          p_referral_token: referral ?? null,
+          p_full_name: values.name.trim(),
+          p_country: values.country.trim(),
+          p_state: values.state.trim(),
+          p_city: values.city.trim(),
+          p_business_name: values.business.trim(),
+          p_category: values.category.trim(),
+          p_contact_number: values.phone.trim(),
+          p_business_logo_path: logoPath,
+          p_profile_photo_path: photoPath,
+          p_accepted_policies: values.acceptedPolicies,
+        });
+        persistenceResponded = true;
+        if (error) throw error;
+      } else {
+        persistenceAttempted = true;
+        const { error } = await client.from("user_profiles").insert({
+          user_id: verified.user.id,
+          role,
+          full_name: values.name.trim(),
+          email: verified.user.email,
+          country: values.country.trim(),
+          state: values.state.trim(),
+          city: values.city.trim(),
+          business_name: values.business.trim(),
+          business_logo_path: logoPath,
+          profile_photo_path: photoPath,
+          category: values.category.trim(),
+          contact_number: values.phone.trim(),
+          accepted_policies: true,
+          terms_accepted_at: new Date().toISOString(),
+        });
+        persistenceResponded = true;
+        if (error) throw error;
+      }
       profileSaved = true;
 
       await refreshAuthUser(role);
@@ -158,7 +289,11 @@ function Register() {
       });
     } catch (error) {
       let cleanupMessage = "";
-      if (!profileSaved && uploadedPaths.length) {
+      if (
+        !profileSaved &&
+        uploadedPaths.length &&
+        (!persistenceAttempted || persistenceResponded)
+      ) {
         const { error: cleanupError } = await client.storage
           .from("profile-assets")
           .remove(uploadedPaths);
@@ -177,6 +312,19 @@ function Register() {
   };
 
   if (!ready) return <Loading />;
+
+  if (invite && referral) {
+    return (
+      <PageFrame>
+        <p
+          role="alert"
+          className="mx-auto max-w-lg rounded-lg bg-destructive/10 p-4 text-sm text-destructive"
+        >
+          This retailer link is invalid because it contains conflicting attribution.
+        </p>
+      </PageFrame>
+    );
+  }
 
   if (sessionError && authUser) {
     return (
@@ -219,6 +367,7 @@ function Register() {
           )}
           <Link
             to="/login"
+            search={attribution ?? {}}
             className="mt-6 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 font-semibold text-primary-foreground"
           >
             Go to sign in <ArrowRight className="h-4 w-4" />
@@ -241,7 +390,26 @@ function Register() {
     );
   }
 
-  if (user.roles.length && !addRole) return <Loading />;
+  if (attribution && user.roles.includes("retailer")) {
+    if (!submitError) return <Loading />;
+    return (
+      <PageFrame>
+        <div className="mx-auto max-w-lg rounded-2xl border bg-card p-7 shadow-card sm:p-9">
+          <p role="alert" className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+            {submitError}
+          </p>
+          <Link
+            to="/retailer"
+            className="mt-5 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 font-semibold text-primary-foreground"
+          >
+            Continue to retailer workspace <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+      </PageFrame>
+    );
+  }
+  if (attribution && role !== "retailer") return <Loading />;
+  if (user.roles.length && !addRole && !attribution) return <Loading />;
   if (!role) {
     return (
       <PageFrame>

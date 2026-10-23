@@ -6,6 +6,10 @@ import { useSession } from "@/lib/session";
 import { startGoogleSignIn } from "@/lib/supabase";
 
 export const Route = createFileRoute("/login")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    ...(typeof search["invite"] === "string" ? { invite: search["invite"] } : {}),
+    ...(typeof search["referral"] === "string" ? { referral: search["referral"] } : {}),
+  }),
   head: () => ({
     meta: [
       { title: "Sign in · Prakash Pariwar" },
@@ -23,6 +27,7 @@ export const Route = createFileRoute("/login")({
 });
 
 function Login() {
+  const { invite, referral } = Route.useSearch();
   const { ready, user, authUser, activeRole, sessionError, refreshAuthUser } = useSession();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -43,7 +48,10 @@ function Login() {
     setError("");
     setLoading(true);
     try {
-      await startGoogleSignIn();
+      await startGoogleSignIn({
+        ...(invite ? { invite } : {}),
+        ...(referral ? { referral } : {}),
+      });
     } catch (cause) {
       setError(
         cause instanceof Error

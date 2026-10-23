@@ -22,7 +22,14 @@ const IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp"];
 export function validateRegistration(values: RegistrationValues, _role: Role): RegistrationErrors {
   const errors: RegistrationErrors = {};
   const required: (keyof RegistrationValues)[] = [
-    "name", "email", "country", "state", "city", "business", "category", "phone",
+    "name",
+    "email",
+    "country",
+    "state",
+    "city",
+    "business",
+    "category",
+    "phone",
   ];
 
   for (const field of required) {
@@ -34,7 +41,8 @@ export function validateRegistration(values: RegistrationValues, _role: Role): R
   if (values.phone && !/^\+?[0-9() .-]{7,20}$/.test(values.phone.trim())) {
     errors.phone = "Enter a valid contact number.";
   }
-  if (!values.acceptedPolicies) errors.acceptedPolicies = "You must accept the Terms and Privacy Policy.";
+  if (!values.acceptedPolicies)
+    errors.acceptedPolicies = "You must accept the Terms and Privacy Policy.";
 
   for (const field of ["businessLogo", "profilePhoto"] as const) {
     const file = values[field];

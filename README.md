@@ -123,3 +123,14 @@ cd <repository-name>
 npm i
 npm run dev
 ```
+
+Vite uses port `8080` by default and selects the next available port (such as `8081`) if it is occupied. This is a local development URL, not the deployed website.
+
+For a built preview, run:
+
+```sh
+npm run build
+npm run preview
+```
+
+The build uses the Nitro Cloudflare preset and writes its worker entry to `.output/server/index.mjs`. The preview script runs Wrangler against `.output`; do not use `vite preview`, which expects a different `dist/server/server.js` entry and returns HTTP 500 for this build.
