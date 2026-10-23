@@ -36,13 +36,17 @@ function Login() {
 
   useEffect(() => {
     if (!ready || !authUser || sessionError) return;
+    if (invite || referral) {
+      void navigate({ to: "/register", search: { ...(invite ? { invite } : {}), ...(referral ? { referral } : {}) }, replace: true });
+      return;
+    }
     const role = activeRole ?? user?.roles[0];
     void navigate({
       to:
         role === "manufacturer" ? "/manufacturer" : role === "retailer" ? "/retailer" : "/register",
       replace: true,
     });
-  }, [activeRole, authUser, navigate, ready, sessionError, user]);
+  }, [activeRole, authUser, invite, referral, navigate, ready, sessionError, user]);
 
   const signIn = async () => {
     setError("");
