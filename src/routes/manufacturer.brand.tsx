@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-export const Route = createFileRoute("/manufacturer/brand")({ component: Page });
+export const Route = createFileRoute("/manufacturer/brand")({
+  head: () => ({ meta: [{ title: 'Manufacturer brand kit · Prakash Pariwar' }, { name: "description", content: 'Manufacturer brand kit for Prakash Pariwar business members.' }, { property: "og:title", content: 'Manufacturer brand kit · Prakash Pariwar' }, { property: "og:description", content: 'Manufacturer brand kit for Prakash Pariwar business members.' }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: Page });
 
 function Page() {
   const [colors, setColors] = useState(["#1B1F3B", "#6D3FE0", "#E8B54A", "#F5F3FF"]);

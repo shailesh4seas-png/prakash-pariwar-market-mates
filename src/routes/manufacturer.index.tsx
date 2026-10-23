@@ -4,7 +4,8 @@ import heroDiwali from "@/assets/hero-diwali.jpg";
 import { Panel, StatusBadge } from "@/components/shared";
 import { CAMPAIGNS, RETAILERS, TEMPLATES } from "@/lib/data";
 
-export const Route = createFileRoute("/manufacturer/")({ component: Overview });
+export const Route = createFileRoute("/manufacturer/")({
+  head: () => ({ meta: [{ title: 'Manufacturer overview · Prakash Pariwar' }, { name: "description", content: 'Manufacturer overview for Prakash Pariwar business members.' }, { property: "og:title", content: 'Manufacturer overview · Prakash Pariwar' }, { property: "og:description", content: 'Manufacturer overview for Prakash Pariwar business members.' }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: Overview });
 
 function Stat({ icon: Icon, label, value, note }: { icon: LucideIcon; label: string; value: number; note: string }) {
   return (

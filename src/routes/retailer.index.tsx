@@ -28,7 +28,8 @@ import { CATEGORIES, NEW_TEMPLATES, RECOMMENDED, TEMPLATES, TRENDING, byIds, typ
 import { library, useLibrary } from "@/lib/library";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/retailer/")({ component: RetailerHome });
+export const Route = createFileRoute("/retailer/")({
+  head: () => ({ meta: [{ title: 'Retailer dashboard · Prakash Pariwar' }, { name: "description", content: 'Retailer dashboard for Prakash Pariwar business members.' }, { property: "og:title", content: 'Retailer dashboard · Prakash Pariwar' }, { property: "og:description", content: 'Retailer dashboard for Prakash Pariwar business members.' }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: RetailerHome });
 
 const SLIDES = [
   { img: heroDiwali, t1: "This Diwali,", t2: "Bring Home ", hi: "Happiness", sub: "Festive offers, modern living.", badge: "Diwali Special Offers" },

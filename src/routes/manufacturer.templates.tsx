@@ -7,7 +7,8 @@ import { TemplateModal } from "@/components/TemplateModal";
 import { TEMPLATES, type Template } from "@/lib/data";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/manufacturer/templates")({ component: Page });
+export const Route = createFileRoute("/manufacturer/templates")({
+  head: () => ({ meta: [{ title: 'Manufacturer templates · Prakash Pariwar' }, { name: "description", content: 'Manufacturer templates for Prakash Pariwar business members.' }, { property: "og:title", content: 'Manufacturer templates · Prakash Pariwar' }, { property: "og:description", content: 'Manufacturer templates for Prakash Pariwar business members.' }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: Page });
 
 const FILTERS = ["all", "published", "draft", "archived"] as const;
 

@@ -7,7 +7,8 @@ import { CATEGORIES, TEMPLATES, type Template } from "@/lib/data";
 import { library, useLibrary } from "@/lib/library";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/retailer/templates")({ component: Page });
+export const Route = createFileRoute("/retailer/templates")({
+  head: () => ({ meta: [{ title: 'Retailer templates · Prakash Pariwar' }, { name: "description", content: 'Retailer templates for Prakash Pariwar business members.' }, { property: "og:title", content: 'Retailer templates · Prakash Pariwar' }, { property: "og:description", content: 'Retailer templates for Prakash Pariwar business members.' }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: Page });
 
 function Page() {
   const [cat, setCat] = useState("All");

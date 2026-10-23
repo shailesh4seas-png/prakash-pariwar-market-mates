@@ -6,7 +6,8 @@ import { CalendarView, Panel, StatusBadge } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import { CAMPAIGNS } from "@/lib/data";
 
-export const Route = createFileRoute("/manufacturer/campaigns")({ component: Page });
+export const Route = createFileRoute("/manufacturer/campaigns")({
+  head: () => ({ meta: [{ title: 'Manufacturer campaigns · Prakash Pariwar' }, { name: "description", content: 'Manufacturer campaigns for Prakash Pariwar business members.' }, { property: "og:title", content: 'Manufacturer campaigns · Prakash Pariwar' }, { property: "og:description", content: 'Manufacturer campaigns for Prakash Pariwar business members.' }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: Page });
 
 function Page() {
   return (

@@ -13,6 +13,7 @@ import { CATEGORIES, TEMPLATES } from "@/lib/data";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/manufacturer/editor")({
+  head: () => ({ meta: [{ title: 'Template editor · Prakash Pariwar' }, { name: "description", content: 'Template editor for Prakash Pariwar business members.' }, { property: "og:title", content: 'Template editor · Prakash Pariwar' }, { property: "og:description", content: 'Template editor for Prakash Pariwar business members.' }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   validateSearch: (s: Record<string, unknown>): { id?: string | undefined } => ({ id: typeof s["id"] === "string" ? s["id"] : undefined }),
   component: Page,
 });

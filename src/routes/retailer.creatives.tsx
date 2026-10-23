@@ -6,7 +6,8 @@ import { TemplatePoster } from "@/components/TemplateCard";
 import { byIds } from "@/lib/data";
 import { useLibrary } from "@/lib/library";
 
-export const Route = createFileRoute("/retailer/creatives")({ component: Page });
+export const Route = createFileRoute("/retailer/creatives")({
+  head: () => ({ meta: [{ title: 'My creatives · Prakash Pariwar' }, { name: "description", content: 'My creatives for Prakash Pariwar business members.' }, { property: "og:title", content: 'My creatives · Prakash Pariwar' }, { property: "og:description", content: 'My creatives for Prakash Pariwar business members.' }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: Page });
 
 function Page() {
   const lib = useLibrary();

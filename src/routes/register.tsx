@@ -22,7 +22,7 @@ export const Route = createFileRoute("/register")({
     ...(typeof search["referral"] === "string" ? { referral: search["referral"] } : {}),
   }),
   head: () => ({
-    meta: [{ title: "Register · Prakash Pariwar" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Register · Prakash Pariwar" }, { name: "description", content: "Register your manufacturer or retailer business with Prakash Pariwar." }, { property: "og:title", content: "Business registration · Prakash Pariwar" }, { property: "og:description", content: "Join your manufacturer network securely with a retailer invitation or permanent registration link." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }],
   }),
   component: Register,
 });

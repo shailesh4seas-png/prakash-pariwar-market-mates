@@ -3,7 +3,8 @@ import { PageHeader } from "@/components/AppShell";
 import { Panel, StatusBadge } from "@/components/shared";
 import { CAMPAIGNS } from "@/lib/data";
 
-export const Route = createFileRoute("/retailer/campaigns")({ component: Page });
+export const Route = createFileRoute("/retailer/campaigns")({
+  head: () => ({ meta: [{ title: 'Retailer campaigns · Prakash Pariwar' }, { name: "description", content: 'Retailer campaigns for Prakash Pariwar business members.' }, { property: "og:title", content: 'Retailer campaigns · Prakash Pariwar' }, { property: "og:description", content: 'Retailer campaigns for Prakash Pariwar business members.' }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: Page });
 
 function Page() {
   return (

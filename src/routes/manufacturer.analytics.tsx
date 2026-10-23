@@ -4,7 +4,8 @@ import { PageHeader } from "@/components/AppShell";
 import { Panel } from "@/components/shared";
 import { TEMPLATES } from "@/lib/data";
 
-export const Route = createFileRoute("/manufacturer/analytics")({ component: Page });
+export const Route = createFileRoute("/manufacturer/analytics")({
+  head: () => ({ meta: [{ title: 'Manufacturer analytics · Prakash Pariwar' }, { name: "description", content: 'Manufacturer analytics for Prakash Pariwar business members.' }, { property: "og:title", content: 'Manufacturer analytics · Prakash Pariwar' }, { property: "og:description", content: 'Manufacturer analytics for Prakash Pariwar business members.' }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: Page });
 
 const USAGE = [
   { m: "May", v: 420 }, { m: "Jun", v: 510 }, { m: "Jul", v: 480 }, { m: "Aug", v: 690 }, { m: "Sep", v: 940 }, { m: "Oct", v: 1620 },

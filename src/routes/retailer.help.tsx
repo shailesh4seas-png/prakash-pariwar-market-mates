@@ -3,7 +3,8 @@ import { PageHeader } from "@/components/AppShell";
 import { Panel } from "@/components/shared";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
-export const Route = createFileRoute("/retailer/help")({ component: Page });
+export const Route = createFileRoute("/retailer/help")({
+  head: () => ({ meta: [{ title: 'Retailer support · Prakash Pariwar' }, { name: "description", content: 'Retailer support for Prakash Pariwar business members.' }, { property: "og:title", content: 'Retailer support · Prakash Pariwar' }, { property: "og:description", content: 'Retailer support for Prakash Pariwar business members.' }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: Page });
 
 const FAQ: [string, string][] = [
   ["How do I add my store name to a template?", "Open any template, fill in your store name, phone and address, then download. Your Brand Kit pre-fills these fields."],

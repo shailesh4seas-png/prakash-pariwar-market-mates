@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export const Route = createFileRoute("/retailer/brand-kit")({ component: Page });
+export const Route = createFileRoute("/retailer/brand-kit")({
+  head: () => ({ meta: [{ title: 'Retailer brand kit · Prakash Pariwar' }, { name: "description", content: 'Retailer brand kit for Prakash Pariwar business members.' }, { property: "og:title", content: 'Retailer brand kit · Prakash Pariwar' }, { property: "og:description", content: 'Retailer brand kit for Prakash Pariwar business members.' }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: Page });
 
 function Page() {
   return (

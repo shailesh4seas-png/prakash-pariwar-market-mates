@@ -37,7 +37,8 @@ import {
   type RetailerInvitationValues,
 } from "@/lib/retailer-invitations";
 
-export const Route = createFileRoute("/manufacturer/retailers")({ component: Page });
+export const Route = createFileRoute("/manufacturer/retailers")({
+  head: () => ({ meta: [{ title: 'Retailer network · Prakash Pariwar' }, { name: "description", content: 'Retailer network for Prakash Pariwar business members.' }, { property: "og:title", content: 'Retailer network · Prakash Pariwar' }, { property: "og:description", content: 'Retailer network for Prakash Pariwar business members.' }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: Page });
 
 interface NetworkRecord {
   id: string;
