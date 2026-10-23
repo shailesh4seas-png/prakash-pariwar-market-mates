@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 export interface RetailerInvitationValues {
   name: string;
   phone: string;
@@ -18,6 +20,8 @@ export function validateRetailerInvitation(
   const errors: RetailerInvitationErrors = {};
   for (const field of ["name", "phone", "business", "city"] as const) {
     if (!values[field].trim()) errors[field] = "This field is required.";
+    else if (!z.string().trim().max(200).refine((value) => !/[\u0000-\u001f]/.test(value)).safeParse(values[field]).success)
+      errors[field] = "Use 200 characters or fewer without control characters.";
   }
   const digits = values.phone.replace(/\D/g, "");
   if (
@@ -58,22 +62,28 @@ export function createRetailerLink(
   } catch {
     throw new Error("Set VITE_PUBLIC_APP_URL to the public application URL before sharing links.");
   }
-  const localHost = base.hostname === "localhost" || base.hostname === "127.0.0.1";
   if (
-    !/^https?:$/.test(base.protocol) ||
-    (base.protocol !== "https:" && !localHost) ||
+    base.protocol !== "https:" ||
+    /^(localhost|127\.0\.0\.1|\[::1\])$/.test(base.hostname) ||
+    base.hostname.includes("id-preview--") ||
+    base.pathname !== "/" || base.search || base.hash ||
     base.username ||
     base.password
   ) {
     throw new Error("VITE_PUBLIC_APP_URL must be a valid public HTTP or HTTPS URL.");
   }
   const link = new URL(path, base);
+  if (link.origin !== base.origin || link.pathname !== "/register")
+    throw new Error("Retailer links must use the public registration page.");
   link.searchParams.set(kind, token);
   return link.toString();
 }
 
-export function createWhatsAppShareUrl(link: string, businessName: string) {
-  const message = `Join ${businessName} on Prakash Pariwar as a retailer: ${link}`;
+export function createWhatsAppShareUrl(link: string, businessName: string, retailerName?: string) {
+  z.string().url().max(2048).parse(link);
+  z.string().trim().min(1).max(200).parse(businessName);
+  if (retailerName) z.string().trim().max(200).parse(retailerName);
+  const message = `${retailerName ? `Hi ${retailerName}, ` : ""}Join ${businessName} on Prakash Pariwar as a retailer: ${link}`;
   return `https://wa.me/?text=${encodeURIComponent(message)}`;
 }
 
@@ -89,8 +99,9 @@ export async function issueRetailerInvitation(
     throw new Error("Complete all required retailer invitation fields.");
   const token = createInvitationToken();
   const link = createRetailerLink("/register", "invite", token, publicAppUrl);
-  await uploadPhoto(values.photo!, paths.photoPath);
-  await uploadPhoto(values.businessLogo!, paths.businessLogoPath);
+  if (!values.photo || !values.businessLogo) throw new Error("Choose both required images.");
+  await uploadPhoto(values.photo, paths.photoPath);
+  await uploadPhoto(values.businessLogo, paths.businessLogoPath);
   await saveInvitation(token, paths.photoPath, paths.businessLogoPath);
   return link;
 }
