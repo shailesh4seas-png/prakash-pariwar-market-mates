@@ -52,7 +52,7 @@ interface NetworkRecord {
   contact_number: string | null;
   profile_photo_path: string | null;
   business_logo_path: string | null;
-  status: "pending" | "active" | "expired";
+  status: "pending" | "active" | "expired" | "revoked";
   joined_at: string | null;
   downloads: number | null;
   record_type: "invitation" | "retailer";
@@ -284,7 +284,7 @@ function Page() {
           ? "Invitation revoked."
           : "Retailer removed from your network.",
       );
-      setRecords((current) => current.filter((record) => record.id !== selectedRecord.id));
+      await loadNetwork();
     } catch {
       toast.error("This network entry could not be removed. Refresh and try again.");
     } finally {
@@ -415,6 +415,7 @@ function Page() {
                             ? "Revoke invitation"
                             : "Remove retailer"
                         }
+                        disabled={record.status === "revoked"}
                         onClick={() => setSelectedRecord(record)}
                       >
                         <Trash2 className="h-4 w-4" />

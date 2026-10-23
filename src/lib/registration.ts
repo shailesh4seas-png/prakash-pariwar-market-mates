@@ -1,4 +1,5 @@
 import type { Role } from "@/lib/session";
+import { z } from "zod";
 
 export interface RegistrationValues {
   name: string;
@@ -34,11 +35,14 @@ export function validateRegistration(values: RegistrationValues, _role: Role): R
 
   for (const field of required) {
     if (!String(values[field]).trim()) errors[field] = "This field is required.";
+    else if (!z.string().trim().max(field === "email" ? 255 : 200).refine((value) => !/[\u0000-\u001f]/.test(value)).safeParse(values[field]).success)
+      errors[field] = "Text is too long or contains invalid characters.";
   }
   if (values.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email)) {
     errors.email = "Enter a valid email address.";
   }
-  if (values.phone && !/^\+?[0-9() .-]{7,20}$/.test(values.phone.trim())) {
+  const digits = values.phone.replace(/\D/g, "");
+  if (values.phone && (!/^\+?[0-9() .-]{7,20}$/.test(values.phone.trim()) || digits.length < 7 || digits.length > 15)) {
     errors.phone = "Enter a valid contact number.";
   }
   if (!values.acceptedPolicies)
@@ -52,6 +56,8 @@ export function validateRegistration(values: RegistrationValues, _role: Role): R
       errors[field] = "Use a PNG, JPG or WebP image.";
     } else if (file.size > MAX_IMAGE_SIZE) {
       errors[field] = "Image must be 5 MB or smaller.";
+    } else if (file.size === 0) {
+      errors[field] = "Choose a non-empty image.";
     }
   }
 

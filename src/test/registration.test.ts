@@ -17,6 +17,16 @@ const completeValues = (): RegistrationValues => ({
 });
 
 describe("role registration validation", () => {
+  it("rejects a phone with fewer than seven digits", () => {
+    const values = completeValues();
+    values.phone = "(12) ---";
+    expect(validateRegistration(values, "retailer").phone).toBeDefined();
+  });
+  it("rejects empty profile images", () => {
+    const values = completeValues();
+    values.profilePhoto = new File([], "photo.png", { type: "image/png" });
+    expect(validateRegistration(values, "retailer").profilePhoto).toBeDefined();
+  });
   it.each(["manufacturer", "retailer"] as Role[])("accepts complete %s registration details", (role) => {
     expect(validateRegistration(completeValues(), role)).toEqual({});
   });

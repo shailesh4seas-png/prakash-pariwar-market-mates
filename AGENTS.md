@@ -12,3 +12,5 @@
 ## Project rules
 - Sign-in uses Supabase Google OAuth; the Supabase session is the sole authentication source. Exactly two app roles exist, manufacturer and retailer; profile rows determine available roles, and role checks go through resolveRole so a user never activates a role they lack. Browser storage may retain only the active-role preference.
 - Each dashboard is a layout route (retailer.tsx, manufacturer.tsx) wrapping AppShell with ssr:false. Why: session lives in the browser.
+- Retailer onboarding reuses the existing private storage bucket and transactional RPCs; deliver security changes as forward migrations without editing applied versions or issuing hosted writes outside the authorized workflow.
+- Validate shared retailer URLs through the invitation helper and retain tokens only in attribution URLs; delete failed uploads only after a confirmed rejected write, never after an ambiguous network outcome.
