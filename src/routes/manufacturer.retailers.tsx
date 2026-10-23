@@ -38,7 +38,21 @@ import {
 } from "@/lib/retailer-invitations";
 
 export const Route = createFileRoute("/manufacturer/retailers")({
-  head: () => ({ meta: [{ title: 'Retailer network · Prakash Pariwar' }, { name: "description", content: 'Retailer network for Prakash Pariwar business members.' }, { property: "og:title", content: 'Retailer network · Prakash Pariwar' }, { property: "og:description", content: 'Retailer network for Prakash Pariwar business members.' }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: Page });
+  head: () => ({
+    meta: [
+      { title: "Retailer network · Prakash Pariwar" },
+      { name: "description", content: "Retailer network for Prakash Pariwar business members." },
+      { property: "og:title", content: "Retailer network · Prakash Pariwar" },
+      {
+        property: "og:description",
+        content: "Retailer network for Prakash Pariwar business members.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
+  component: Page,
+});
 
 interface NetworkRecord {
   id: string;
@@ -401,7 +415,9 @@ function Page() {
                       {[record.city, record.state].filter(Boolean).join(", ")}
                     </td>
                     <td>
-                      <StatusBadge status={record.status === "pending" ? "Pending Invitation" : record.status} />
+                      <StatusBadge
+                        status={record.status === "pending" ? "Pending Invitation" : record.status}
+                      />
                     </td>
                     <td className="text-muted-foreground">
                       {record.joined_at ? new Date(record.joined_at).toLocaleDateString() : "—"}
@@ -487,7 +503,9 @@ function Page() {
           </DialogDescription>
           {createdLink ? (
             <div className="space-y-3">
-              <p className="font-semibold">{createdRetailer.name} · {createdRetailer.business}</p>
+              <p className="font-semibold">
+                {createdRetailer.name} · {createdRetailer.business}
+              </p>
               <p role="status" className="flex items-center gap-2 text-sm font-medium">
                 <Check className="h-4 w-4 text-success" /> Invitation link created. It has not been
                 sent.
@@ -501,63 +519,75 @@ function Page() {
                   <Copy className="h-4 w-4" /> Copy Invitation Link
                 </Button>
                 <Button variant="outline" asChild>
-                  <a href={createWhatsAppShareUrl(createdLink, user?.business ?? "your manufacturer", createdRetailer.name)} target="_blank" rel="noreferrer">
+                  <a
+                    href={createWhatsAppShareUrl(
+                      createdLink,
+                      user?.business ?? "your manufacturer",
+                      createdRetailer.name,
+                    )}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
                     <MessageCircle className="h-4 w-4" /> Send Invitation on WhatsApp
                   </a>
                 </Button>
               </div>
             </div>
           ) : (
-            <form noValidate onSubmit={(event) => void createInvitation(event)} className="space-y-4">
+            <form
+              noValidate
+              onSubmit={(event) => void createInvitation(event)}
+              className="space-y-4"
+            >
               <fieldset disabled={creating} className="space-y-4">
-              <Field
-                label="Retailer / contact person name"
-                value={values.name}
-                error={errors.name}
-                onChange={(value) => update("name", value)}
-              />
-              <Field
-                label="Mobile number"
-                value={values.phone}
-                error={errors.phone}
-                type="tel"
-                onChange={(value) => update("phone", value)}
-              />
-              <Field
-                label="Business / store name"
-                value={values.business}
-                error={errors.business}
-                onChange={(value) => update("business", value)}
-              />
-              <Field
-                label="City"
-                value={values.city}
-                error={errors.city}
-                onChange={(value) => update("city", value)}
-              />
-              <InviteImageUpload
-                id="retailer-photo"
-                label="Retailer profile photo"
-                file={values.photo}
-                error={errors.photo}
-                onChange={(file) => update("photo", file)}
-              />
-              <InviteImageUpload
-                id="retailer-business-logo"
-                label="Business / store logo"
-                file={values.businessLogo}
-                error={errors.businessLogo}
-                onChange={(file) => update("businessLogo", file)}
-              />
-              <Button type="submit" disabled={creating} className="w-full bg-gradient-primary">
-                {creating ? (
-                  <>
-                    <LoaderCircle className="h-4 w-4 animate-spin" /> Creating invitation...
-                  </>
-                ) : (
-                  "Generate Invitation Link"
-                )}
-              </Button>
+                <Field
+                  label="Retailer / contact person name"
+                  value={values.name}
+                  error={errors.name}
+                  onChange={(value) => update("name", value)}
+                />
+                <Field
+                  label="Mobile number"
+                  value={values.phone}
+                  error={errors.phone}
+                  type="tel"
+                  onChange={(value) => update("phone", value)}
+                />
+                <Field
+                  label="Business / store name"
+                  value={values.business}
+                  error={errors.business}
+                  onChange={(value) => update("business", value)}
+                />
+                <Field
+                  label="City"
+                  value={values.city}
+                  error={errors.city}
+                  onChange={(value) => update("city", value)}
+                />
+                <InviteImageUpload
+                  id="retailer-photo"
+                  label="Retailer profile photo"
+                  file={values.photo}
+                  error={errors.photo}
+                  onChange={(file) => update("photo", file)}
+                />
+                <InviteImageUpload
+                  id="retailer-business-logo"
+                  label="Business / store logo"
+                  file={values.businessLogo}
+                  error={errors.businessLogo}
+                  onChange={(file) => update("businessLogo", file)}
+                />
+                <Button type="submit" disabled={creating} className="w-full bg-gradient-primary">
+                  {creating ? (
+                    <>
+                      <LoaderCircle className="h-4 w-4 animate-spin" /> Creating invitation...
+                    </>
+                  ) : (
+                    "Generate Invitation Link"
+                  )}
+                </Button>
               </fieldset>
             </form>
           )}
@@ -578,7 +608,9 @@ function Page() {
                 : "Remove this retailer?"}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              <span className="block font-semibold">{selectedRecord?.retailer_name} · {selectedRecord?.business_name}</span>
+              <span className="block font-semibold">
+                {selectedRecord?.retailer_name} · {selectedRecord?.business_name}
+              </span>
               {selectedRecord?.record_type === "invitation"
                 ? "The link will stop working and cannot create a retailer association."
                 : "This removes the retailer from your network but keeps their account and existing history."}

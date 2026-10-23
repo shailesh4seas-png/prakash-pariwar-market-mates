@@ -18,15 +18,20 @@ const validValues = (): RetailerInvitationValues => ({
 });
 
 describe("retailer invitation helpers", () => {
-  it.each(["name", "phone", "business", "city", "photo", "businessLogo"] as const)("requires %s", (field) => {
-    const values = validValues();
-    if (field === "photo" || field === "businessLogo") values[field] = null;
-    else values[field] = "";
-    expect(validateRetailerInvitation(values)[field]).toBeDefined();
-  });
+  it.each(["name", "phone", "business", "city", "photo", "businessLogo"] as const)(
+    "requires %s",
+    (field) => {
+      const values = validValues();
+      if (field === "photo" || field === "businessLogo") values[field] = null;
+      else values[field] = "";
+      expect(validateRetailerInvitation(values)[field]).toBeDefined();
+    },
+  );
   it("allows exactly 5 MiB and rejects an empty business logo", () => {
     const values = validValues();
-    values.photo = new File([new Uint8Array(5 * 1024 * 1024)], "photo.webp", { type: "image/webp" });
+    values.photo = new File([new Uint8Array(5 * 1024 * 1024)], "photo.webp", {
+      type: "image/webp",
+    });
     expect(validateRetailerInvitation(values).photo).toBeUndefined();
     values.businessLogo = new File([], "logo.png", { type: "image/png" });
     expect(validateRetailerInvitation(values).businessLogo).toBeDefined();
@@ -36,21 +41,51 @@ describe("retailer invitation helpers", () => {
     values.name = "x".repeat(201);
     expect(validateRetailerInvitation(values).name).toBeDefined();
   });
-  it.each(["http://localhost:8080", "https://localhost", "https://id-preview--example.lovable.app", "https://market.example/register"])("rejects nonpublic origins: %s", (origin) => {
+  it.each([
+    "http://localhost:8080",
+    "https://localhost",
+    "https://id-preview--example.lovable.app",
+    "https://market.example/register",
+  ])("rejects nonpublic origins: %s", (origin) => {
     expect(() => createRetailerLink("/register", "invite", "abc123", origin)).toThrow();
   });
   it("blocks redirecting a retailer link to another origin", () => {
-    expect(() => createRetailerLink("https://evil.example/register", "invite", "abc", "https://market.example")).toThrow();
+    expect(() =>
+      createRetailerLink(
+        "https://evil.example/register",
+        "invite",
+        "abc",
+        "https://market.example",
+      ),
+    ).toThrow();
   });
   it("does not upload images when public URL is missing", async () => {
     const upload = vi.fn();
     const save = vi.fn();
-    await expect(issueRetailerInvitation(validValues(), "", { photoPath: "photo", businessLogoPath: "logo" }, upload, save)).rejects.toThrow();
+    await expect(
+      issueRetailerInvitation(
+        validValues(),
+        "",
+        { photoPath: "photo", businessLogoPath: "logo" },
+        upload,
+        save,
+      ),
+    ).rejects.toThrow();
     expect(upload).not.toHaveBeenCalled();
     expect(save).not.toHaveBeenCalled();
   });
   it("does not return success when persistence fails", async () => {
-    await expect(issueRetailerInvitation(validValues(), "https://market.example", { photoPath: "photo", businessLogoPath: "logo" }, vi.fn(), async () => { throw new Error("database rejected"); })).rejects.toThrow("database rejected");
+    await expect(
+      issueRetailerInvitation(
+        validValues(),
+        "https://market.example",
+        { photoPath: "photo", businessLogoPath: "logo" },
+        vi.fn(),
+        async () => {
+          throw new Error("database rejected");
+        },
+      ),
+    ).rejects.toThrow("database rejected");
   });
   it("requires all invite fields and a valid mobile number and photo", () => {
     expect(validateRetailerInvitation(validValues())).toEqual({});

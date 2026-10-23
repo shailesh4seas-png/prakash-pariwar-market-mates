@@ -20,7 +20,14 @@ export function validateRetailerInvitation(
   const errors: RetailerInvitationErrors = {};
   for (const field of ["name", "phone", "business", "city"] as const) {
     if (!values[field].trim()) errors[field] = "This field is required.";
-    else if (!z.string().trim().max(200).refine((value) => !/[\u0000-\u001f]/.test(value)).safeParse(values[field]).success)
+    else if (
+      !z
+        .string()
+        .trim()
+        .max(200)
+        .refine((value) => !/[\u0000-\u001f]/.test(value))
+        .safeParse(values[field]).success
+    )
       errors[field] = "Use 200 characters or fewer without control characters.";
   }
   const digits = values.phone.replace(/\D/g, "");
@@ -66,7 +73,9 @@ export function createRetailerLink(
     base.protocol !== "https:" ||
     /^(localhost|127\.0\.0\.1|\[::1\])$/.test(base.hostname) ||
     base.hostname.includes("id-preview--") ||
-    base.pathname !== "/" || base.search || base.hash ||
+    base.pathname !== "/" ||
+    base.search ||
+    base.hash ||
     base.username ||
     base.password
   ) {

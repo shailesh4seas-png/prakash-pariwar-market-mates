@@ -37,7 +37,11 @@ function Login() {
   useEffect(() => {
     if (!ready || !authUser || sessionError) return;
     if (invite || referral) {
-      void navigate({ to: "/register", search: { ...(invite ? { invite } : {}), ...(referral ? { referral } : {}) }, replace: true });
+      void navigate({
+        to: "/register",
+        search: { ...(invite ? { invite } : {}), ...(referral ? { referral } : {}) },
+        replace: true,
+      });
       return;
     }
     const role = activeRole ?? user?.roles[0];

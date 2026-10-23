@@ -1,5 +1,14 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
-import { BarChart3, CalendarDays, LayoutDashboard, LayoutTemplate, Palette, PenSquare, Settings, Users } from "lucide-react";
+import {
+  BarChart3,
+  CalendarDays,
+  LayoutDashboard,
+  LayoutTemplate,
+  Palette,
+  PenSquare,
+  Settings,
+  Users,
+} from "lucide-react";
 import { AppShell, type NavItem } from "@/components/AppShell";
 
 const items: NavItem[] = [
@@ -18,7 +27,10 @@ export const Route = createFileRoute("/manufacturer")({
   head: () => ({
     meta: [
       { title: "Manufacturer Dashboard · Prakash Pariwar" },
-      { name: "description", content: "Manage brand templates, campaigns and your retailer network." },
+      {
+        name: "description",
+        content: "Manage brand templates, campaigns and your retailer network.",
+      },
       { name: "robots", content: "noindex" },
     ],
   }),

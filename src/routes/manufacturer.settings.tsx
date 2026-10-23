@@ -5,7 +5,24 @@ import { ProfileSettings } from "@/components/ProfileSettings";
 import { Switch } from "@/components/ui/switch";
 
 export const Route = createFileRoute("/manufacturer/settings")({
-  head: () => ({ meta: [{ title: 'Manufacturer settings · Prakash Pariwar' }, { name: "description", content: 'Manufacturer settings for Prakash Pariwar business members.' }, { property: "og:title", content: 'Manufacturer settings · Prakash Pariwar' }, { property: "og:description", content: 'Manufacturer settings for Prakash Pariwar business members.' }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: Page });
+  head: () => ({
+    meta: [
+      { title: "Manufacturer settings · Prakash Pariwar" },
+      {
+        name: "description",
+        content: "Manufacturer settings for Prakash Pariwar business members.",
+      },
+      { property: "og:title", content: "Manufacturer settings · Prakash Pariwar" },
+      {
+        property: "og:description",
+        content: "Manufacturer settings for Prakash Pariwar business members.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
+  component: Page,
+});
 
 const ALERTS = [
   ["A retailer accepts an invitation", true],
