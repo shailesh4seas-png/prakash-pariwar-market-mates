@@ -37,7 +37,22 @@ import {
   type RetailerInvitationValues,
 } from "@/lib/retailer-invitations";
 
-export const Route = createFileRoute("/manufacturer/retailers")({ component: Page });
+export const Route = createFileRoute("/manufacturer/retailers")({
+  head: () => ({
+    meta: [
+      { title: "Retailer network · Prakash Pariwar" },
+      { name: "description", content: "Retailer network for Prakash Pariwar business members." },
+      { property: "og:title", content: "Retailer network · Prakash Pariwar" },
+      {
+        property: "og:description",
+        content: "Retailer network for Prakash Pariwar business members.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
+  component: Page,
+});
 
 interface NetworkRecord {
   id: string;
@@ -52,7 +67,7 @@ interface NetworkRecord {
   contact_number: string | null;
   profile_photo_path: string | null;
   business_logo_path: string | null;
-  status: "pending" | "active" | "expired";
+  status: "pending" | "active" | "expired" | "revoked";
   joined_at: string | null;
   downloads: number | null;
   record_type: "invitation" | "retailer";
@@ -80,6 +95,7 @@ function Page() {
   const [errors, setErrors] = useState<RetailerInvitationErrors>({});
   const [creating, setCreating] = useState(false);
   const [createdLink, setCreatedLink] = useState("");
+  const [createdRetailer, setCreatedRetailer] = useState({ name: "", business: "" });
   const [referralLink, setReferralLink] = useState("");
   const [referralError, setReferralError] = useState("");
   const [removing, setRemoving] = useState(false);
@@ -202,6 +218,7 @@ function Page() {
       businessLogoPath: "",
     };
     let invitationRequestStarted = false;
+    let invitationRequestResponded = false;
     setCreating(true);
     try {
       const { data: verified, error: verifyError } = await client.auth.getUser();
@@ -214,8 +231,9 @@ function Page() {
         const extension = file.type === "image/jpeg" ? "jpg" : file.type.split("/")[1];
         return `${verified.user.id}/manufacturer/${folder}/${crypto.randomUUID()}.${extension}`;
       };
-      invitationPaths.photoPath = storagePath(values.photo!, "invitation-photos");
-      invitationPaths.businessLogoPath = storagePath(values.businessLogo!, "invitation-logos");
+      if (!values.photo || !values.businessLogo) throw new Error("Choose both required images.");
+      invitationPaths.photoPath = storagePath(values.photo, "invitation-photos");
+      invitationPaths.businessLogoPath = storagePath(values.businessLogo, "invitation-logos");
       const link = await issueRetailerInvitation(
         values,
         PUBLIC_APP_URL ?? "",
@@ -239,16 +257,18 @@ function Page() {
             p_profile_photo_path: photoPath,
             p_business_logo_path: businessLogoPath,
           });
-          if (error) throw new Error("Invitation could not be saved. Please try again.");
+          invitationRequestResponded = true;
+          if (error) throw new Error(`Invitation could not be saved: ${error.message}`);
         },
       );
       setCreatedLink(link);
+      setCreatedRetailer({ name: values.name.trim(), business: values.business.trim() });
       setValues(EMPTY_INVITE);
       setErrors({});
       await loadNetwork();
       toast.success("Invitation link created. Share it with the retailer to continue.");
     } catch (cause) {
-      if (uploadedPaths.length && !invitationRequestStarted) {
+      if (uploadedPaths.length && (!invitationRequestStarted || invitationRequestResponded)) {
         const { error: cleanupError } = await client.storage
           .from("profile-assets")
           .remove(uploadedPaths);
@@ -279,7 +299,7 @@ function Page() {
           ? "Invitation revoked."
           : "Retailer removed from your network.",
       );
-      setRecords((current) => current.filter((record) => record.id !== selectedRecord.id));
+      await loadNetwork();
     } catch {
       toast.error("This network entry could not be removed. Refresh and try again.");
     } finally {
@@ -342,7 +362,7 @@ function Page() {
                   <th>Business / logo</th>
                   <th>City</th>
                   <th>Status</th>
-                  <th>Joined</th>
+                  <th>Created / joined</th>
                   <th>Downloads</th>
                   <th className="text-right">Actions</th>
                 </tr>
@@ -395,7 +415,9 @@ function Page() {
                       {[record.city, record.state].filter(Boolean).join(", ")}
                     </td>
                     <td>
-                      <StatusBadge status={record.status} />
+                      <StatusBadge
+                        status={record.status === "pending" ? "Pending Invitation" : record.status}
+                      />
                     </td>
                     <td className="text-muted-foreground">
                       {record.joined_at ? new Date(record.joined_at).toLocaleDateString() : "—"}
@@ -410,6 +432,7 @@ function Page() {
                             ? "Revoke invitation"
                             : "Remove retailer"
                         }
+                        disabled={record.status === "revoked"}
                         onClick={() => setSelectedRecord(record)}
                       >
                         <Trash2 className="h-4 w-4" />
@@ -428,7 +451,7 @@ function Page() {
 
       <Panel title="Permanent Retailer Registration Link" className="mt-6">
         <p className="mb-3 text-sm text-muted-foreground">
-          A reusable referral link for retailers to register directly with your network.
+          Share this reusable registration link in groups, broadcasts or directly with retailers.
         </p>
         {referralError ? (
           <p role="alert" className="text-sm text-destructive">
@@ -446,11 +469,11 @@ function Page() {
               variant="outline"
               onClick={() => void copyLink(referralLink, "Permanent link copied.")}
             >
-              <Copy className="h-4 w-4" /> Copy link
+              <Copy className="h-4 w-4" /> Copy Permanent Link
             </Button>
             <Button variant="outline" asChild>
               <a href={whatsappLink(referralLink)} target="_blank" rel="noreferrer">
-                <MessageCircle className="h-4 w-4" /> WhatsApp
+                <MessageCircle className="h-4 w-4" /> Share on WhatsApp
               </a>
             </Button>
           </div>
@@ -464,6 +487,7 @@ function Page() {
       <Dialog
         open={open}
         onOpenChange={(next) => {
+          if (invitationInFlight.current) return;
           setOpen(next);
           if (!next) {
             setErrors({});
@@ -471,7 +495,7 @@ function Page() {
           }
         }}
       >
-        <DialogContent>
+        <DialogContent className="max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] overflow-y-auto">
           <DialogTitle>Invite a retailer</DialogTitle>
           <DialogDescription>
             Generate a secure invitation link for one retailer. They become active after completing
@@ -479,6 +503,9 @@ function Page() {
           </DialogDescription>
           {createdLink ? (
             <div className="space-y-3">
+              <p className="font-semibold">
+                {createdRetailer.name} · {createdRetailer.business}
+              </p>
               <p role="status" className="flex items-center gap-2 text-sm font-medium">
                 <Check className="h-4 w-4 text-success" /> Invitation link created. It has not been
                 sent.
@@ -489,65 +516,79 @@ function Page() {
                   variant="outline"
                   onClick={() => void copyLink(createdLink, "Invitation link copied.")}
                 >
-                  <Copy className="h-4 w-4" /> Copy link
+                  <Copy className="h-4 w-4" /> Copy Invitation Link
                 </Button>
                 <Button variant="outline" asChild>
-                  <a href={whatsappLink(createdLink)} target="_blank" rel="noreferrer">
-                    <MessageCircle className="h-4 w-4" /> WhatsApp
+                  <a
+                    href={createWhatsAppShareUrl(
+                      createdLink,
+                      user?.business ?? "your manufacturer",
+                      createdRetailer.name,
+                    )}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <MessageCircle className="h-4 w-4" /> Send Invitation on WhatsApp
                   </a>
                 </Button>
               </div>
             </div>
           ) : (
-            <form onSubmit={(event) => void createInvitation(event)} className="space-y-4">
-              <Field
-                label="Retailer / contact person name"
-                value={values.name}
-                error={errors.name}
-                onChange={(value) => update("name", value)}
-              />
-              <Field
-                label="Mobile number"
-                value={values.phone}
-                error={errors.phone}
-                type="tel"
-                onChange={(value) => update("phone", value)}
-              />
-              <Field
-                label="Business / store name"
-                value={values.business}
-                error={errors.business}
-                onChange={(value) => update("business", value)}
-              />
-              <Field
-                label="City"
-                value={values.city}
-                error={errors.city}
-                onChange={(value) => update("city", value)}
-              />
-              <InviteImageUpload
-                id="retailer-photo"
-                label="Retailer profile photo"
-                file={values.photo}
-                error={errors.photo}
-                onChange={(file) => update("photo", file)}
-              />
-              <InviteImageUpload
-                id="retailer-business-logo"
-                label="Business / store logo"
-                file={values.businessLogo}
-                error={errors.businessLogo}
-                onChange={(file) => update("businessLogo", file)}
-              />
-              <Button type="submit" disabled={creating} className="w-full bg-gradient-primary">
-                {creating ? (
-                  <>
-                    <LoaderCircle className="h-4 w-4 animate-spin" /> Creating invitation...
-                  </>
-                ) : (
-                  "Create invitation link"
-                )}
-              </Button>
+            <form
+              noValidate
+              onSubmit={(event) => void createInvitation(event)}
+              className="space-y-4"
+            >
+              <fieldset disabled={creating} className="space-y-4">
+                <Field
+                  label="Retailer / contact person name"
+                  value={values.name}
+                  error={errors.name}
+                  onChange={(value) => update("name", value)}
+                />
+                <Field
+                  label="Mobile number"
+                  value={values.phone}
+                  error={errors.phone}
+                  type="tel"
+                  onChange={(value) => update("phone", value)}
+                />
+                <Field
+                  label="Business / store name"
+                  value={values.business}
+                  error={errors.business}
+                  onChange={(value) => update("business", value)}
+                />
+                <Field
+                  label="City"
+                  value={values.city}
+                  error={errors.city}
+                  onChange={(value) => update("city", value)}
+                />
+                <InviteImageUpload
+                  id="retailer-photo"
+                  label="Retailer profile photo"
+                  file={values.photo}
+                  error={errors.photo}
+                  onChange={(file) => update("photo", file)}
+                />
+                <InviteImageUpload
+                  id="retailer-business-logo"
+                  label="Business / store logo"
+                  file={values.businessLogo}
+                  error={errors.businessLogo}
+                  onChange={(file) => update("businessLogo", file)}
+                />
+                <Button type="submit" disabled={creating} className="w-full bg-gradient-primary">
+                  {creating ? (
+                    <>
+                      <LoaderCircle className="h-4 w-4 animate-spin" /> Creating invitation...
+                    </>
+                  ) : (
+                    "Generate Invitation Link"
+                  )}
+                </Button>
+              </fieldset>
             </form>
           )}
         </DialogContent>
@@ -567,6 +608,9 @@ function Page() {
                 : "Remove this retailer?"}
             </AlertDialogTitle>
             <AlertDialogDescription>
+              <span className="block font-semibold">
+                {selectedRecord?.retailer_name} · {selectedRecord?.business_name}
+              </span>
               {selectedRecord?.record_type === "invitation"
                 ? "The link will stop working and cannot create a retailer association."
                 : "This removes the retailer from your network but keeps their account and existing history."}
@@ -643,6 +687,7 @@ function InviteImageUpload({
       <Input
         id={id}
         type="file"
+        required
         accept="image/png,image/jpeg,image/webp"
         onChange={(event: ChangeEvent<HTMLInputElement>) =>
           onChange(event.target.files?.[0] ?? null)
@@ -679,6 +724,7 @@ function Field({
         id={id}
         type={type}
         required
+        maxLength={type === "tel" ? 20 : 200}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         aria-invalid={Boolean(error)}

@@ -17,29 +17,47 @@ const completeValues = (): RegistrationValues => ({
 });
 
 describe("role registration validation", () => {
-  it.each(["manufacturer", "retailer"] as Role[])("accepts complete %s registration details", (role) => {
-    expect(validateRegistration(completeValues(), role)).toEqual({});
-  });
-
-  it.each(["manufacturer", "retailer"] as Role[])("rejects missing required fields for %s", (role) => {
+  it("rejects a phone with fewer than seven digits", () => {
     const values = completeValues();
-    values.name = " ";
-    values.city = "";
-    values.acceptedPolicies = false;
-    values.businessLogo = null;
-
-    expect(validateRegistration(values, role)).toMatchObject({
-      name: "This field is required.",
-      city: "This field is required.",
-      acceptedPolicies: "You must accept the Terms and Privacy Policy.",
-      businessLogo: "Choose an image to continue.",
-    });
+    values.phone = "(12) ---";
+    expect(validateRegistration(values, "retailer").phone).toBeDefined();
   });
+  it("rejects empty profile images", () => {
+    const values = completeValues();
+    values.profilePhoto = new File([], "photo.png", { type: "image/png" });
+    expect(validateRegistration(values, "retailer").profilePhoto).toBeDefined();
+  });
+  it.each(["manufacturer", "retailer"] as Role[])(
+    "accepts complete %s registration details",
+    (role) => {
+      expect(validateRegistration(completeValues(), role)).toEqual({});
+    },
+  );
+
+  it.each(["manufacturer", "retailer"] as Role[])(
+    "rejects missing required fields for %s",
+    (role) => {
+      const values = completeValues();
+      values.name = " ";
+      values.city = "";
+      values.acceptedPolicies = false;
+      values.businessLogo = null;
+
+      expect(validateRegistration(values, role)).toMatchObject({
+        name: "This field is required.",
+        city: "This field is required.",
+        acceptedPolicies: "You must accept the Terms and Privacy Policy.",
+        businessLogo: "Choose an image to continue.",
+      });
+    },
+  );
 
   it("rejects invalid image types, oversized images, email and phone numbers", () => {
     const values = completeValues();
     values.businessLogo = new File(["not an image"], "logo.svg", { type: "image/svg+xml" });
-    values.profilePhoto = new File([new Uint8Array(5 * 1024 * 1024 + 1)], "large.jpg", { type: "image/jpeg" });
+    values.profilePhoto = new File([new Uint8Array(5 * 1024 * 1024 + 1)], "large.jpg", {
+      type: "image/jpeg",
+    });
     values.email = "not-an-email";
     values.phone = "abc";
 

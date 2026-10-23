@@ -22,7 +22,22 @@ export const Route = createFileRoute("/register")({
     ...(typeof search["referral"] === "string" ? { referral: search["referral"] } : {}),
   }),
   head: () => ({
-    meta: [{ title: "Register · Prakash Pariwar" }, { name: "robots", content: "noindex" }],
+    meta: [
+      { title: "Register · Prakash Pariwar" },
+      {
+        name: "description",
+        content: "Register your manufacturer or retailer business with Prakash Pariwar.",
+      },
+      { property: "og:title", content: "Business registration · Prakash Pariwar" },
+      {
+        property: "og:description",
+        content:
+          "Join your manufacturer network securely with a retailer invitation or permanent registration link.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { name: "robots", content: "noindex" },
+    ],
   }),
   component: Register,
 });
@@ -57,6 +72,7 @@ function Register() {
   const [saving, setSaving] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const handledAttribution = useRef("");
+  const registrationInFlight = useRef(false);
   const attribution = invite && !referral ? { invite } : referral && !invite ? { referral } : null;
 
   const callbackError = oauthError
@@ -169,7 +185,8 @@ function Register() {
 
   useEffect(() => {
     if (!ready || !authUser || addRole || invite || referral || !user?.roles.length) return;
-    const targetRole = activeRole ?? user.roles[0]!;
+    const targetRole = activeRole ?? user.roles[0];
+    if (!targetRole) return;
     void navigate({
       to: targetRole === "manufacturer" ? "/manufacturer" : "/retailer",
       replace: true,
@@ -194,6 +211,7 @@ function Register() {
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (registrationInFlight.current) return;
     setSubmitError("");
     if (invite && referral) {
       setSubmitError("This retailer link is invalid because it contains conflicting attribution.");
@@ -208,6 +226,7 @@ function Register() {
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length) return;
 
+    registrationInFlight.current = true;
     setSaving(true);
     const uploadedPaths: string[] = [];
     let profileSaved = false;
@@ -239,8 +258,10 @@ function Register() {
         uploadedPaths.push(path);
         return path;
       };
-      const logoPath = await upload(values.businessLogo!, "business-logo");
-      const photoPath = await upload(values.profilePhoto!, "profile-photo");
+      if (!values.businessLogo || !values.profilePhoto)
+        throw new Error("Choose both required images.");
+      const logoPath = await upload(values.businessLogo, "business-logo");
+      const photoPath = await upload(values.profilePhoto, "profile-photo");
       if ((invite && !referral) || (referral && !invite)) {
         persistenceAttempted = true;
         const { error } = await client.rpc("complete_retailer_registration", {
@@ -307,6 +328,7 @@ function Register() {
           : "Registration could not be saved. Please try again.") + cleanupMessage,
       );
     } finally {
+      registrationInFlight.current = false;
       setSaving(false);
     }
   };
