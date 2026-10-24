@@ -1,6 +1,7 @@
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import type { User as AuthUser } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
+import { SessionContext } from "@/lib/session-context";
 
 export type Role = "manufacturer" | "retailer";
 
@@ -56,7 +57,7 @@ interface LoadedAccount {
   activeProfile: UserProfile | null;
 }
 
-interface SessionState {
+export interface SessionState {
   ready: boolean;
   user: AppUser | null;
   activeRole: Role | null;
@@ -67,8 +68,6 @@ interface SessionState {
   switchRole: (role: Role) => boolean;
   signOut: () => Promise<void>;
 }
-
-const Ctx = createContext<SessionState | null>(null);
 
 function saveRolePreference(userId: string, role: Role) {
   try {
@@ -317,7 +316,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <Ctx.Provider
+    <SessionContext.Provider
       value={{
         ready,
         user,
@@ -331,12 +330,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       }}
     >
       {children}
-    </Ctx.Provider>
+    </SessionContext.Provider>
   );
 }
 
 export function useSession() {
-  const c = useContext(Ctx);
+  const c = useContext(SessionContext);
   if (!c) throw new Error("useSession outside provider");
   return c;
 }

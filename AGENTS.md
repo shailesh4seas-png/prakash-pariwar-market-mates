@@ -15,3 +15,4 @@
 - Retailer onboarding reuses the existing private storage bucket and transactional RPCs; deliver security changes as forward migrations without editing applied versions or issuing hosted writes outside the authorized workflow.
 - Validate shared retailer URLs through the invitation helper and retain tokens only in attribution URLs; delete failed uploads only after a confirmed rejected write, never after an ambiguous network outcome.
 - Use the shared upload-cleanup decision for invitation and registration writes; network failures and server errors cannot prove a transaction was rejected.
+- Define session context in a separate non-component module; hot updates to the provider must not recreate the context consumed by lazy routes.
