@@ -14,3 +14,4 @@
 - Each dashboard is a layout route (retailer.tsx, manufacturer.tsx) wrapping AppShell with ssr:false. Why: session lives in the browser.
 - Retailer onboarding reuses the existing private storage bucket and transactional RPCs; deliver security changes as forward migrations without editing applied versions or issuing hosted writes outside the authorized workflow.
 - Validate shared retailer URLs through the invitation helper and retain tokens only in attribution URLs; delete failed uploads only after a confirmed rejected write, never after an ambiguous network outcome.
+- Use the shared upload-cleanup decision for invitation and registration writes; network failures and server errors cannot prove a transaction was rejected.

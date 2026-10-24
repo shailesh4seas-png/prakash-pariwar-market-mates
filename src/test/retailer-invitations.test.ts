@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+  canCleanUpFailedUploads,
   createInvitationToken,
   createRetailerLink,
   createWhatsAppShareUrl,
@@ -18,6 +19,16 @@ const validValues = (): RetailerInvitationValues => ({
 });
 
 describe("retailer invitation helpers", () => {
+  it("preserves uploaded assets after an ambiguous write outcome", () => {
+    expect(canCleanUpFailedUploads(true, 0)).toBe(false);
+    expect(canCleanUpFailedUploads(true, 503)).toBe(false);
+    expect(canCleanUpFailedUploads(true)).toBe(false);
+    expect(canCleanUpFailedUploads(true, 200)).toBe(false);
+  });
+  it("cleans up only before a write or after a confirmed rejection", () => {
+    expect(canCleanUpFailedUploads(false)).toBe(true);
+    expect(canCleanUpFailedUploads(true, 403)).toBe(true);
+  });
   it.each(["name", "phone", "business", "city", "photo", "businessLogo"] as const)(
     "requires %s",
     (field) => {

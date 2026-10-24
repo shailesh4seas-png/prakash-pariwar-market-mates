@@ -33,10 +33,19 @@ export function TemplateModal({
                 className={format === "Story" ? "mx-auto aspect-[9/16] max-h-[60vh]" : ""}
                 overlay={
                   <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-foreground/90 to-transparent p-4 pt-10 text-primary-foreground">
-                    <p className="flex items-center gap-1.5 text-sm font-bold"><Store className="h-4 w-4" />{name || "Your store"}</p>
+                    <p className="flex items-center gap-1.5 text-sm font-bold">
+                      <Store className="h-4 w-4" />
+                      {name || "Your store"}
+                    </p>
                     <p className="mt-1 flex flex-wrap gap-x-3 text-xs opacity-90">
-                      <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{phone}</span>
-                      <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{address}</span>
+                      <span className="flex items-center gap-1">
+                        <Phone className="h-3 w-3" />
+                        {phone}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <MapPin className="h-3 w-3" />
+                        {address}
+                      </span>
                     </p>
                   </div>
                 }
@@ -44,13 +53,26 @@ export function TemplateModal({
             </div>
             <div className="space-y-4 p-6">
               <div>
-                <span className="rounded-full bg-accent px-2.5 py-1 text-xs font-semibold text-accent-foreground">{template.category}</span>
+                <span className="rounded-full bg-accent px-2.5 py-1 text-xs font-semibold text-accent-foreground">
+                  {template.category}
+                </span>
                 <DialogTitle className="mt-3 text-2xl font-bold">{template.title}</DialogTitle>
-                <DialogDescription>By {template.brand} · Personalise with your store details</DialogDescription>
+                <DialogDescription>
+                  By {template.brand} · Personalise with your store details
+                </DialogDescription>
               </div>
-              <div className="space-y-1.5"><Label>Retailer name</Label><Input value={name} onChange={(e) => setName(e.target.value)} /></div>
-              <div className="space-y-1.5"><Label>Phone number</Label><Input value={phone} onChange={(e) => setPhone(e.target.value)} /></div>
-              <div className="space-y-1.5"><Label>Address watermark</Label><Input value={address} onChange={(e) => setAddress(e.target.value)} /></div>
+              <div className="space-y-1.5">
+                <Label>Retailer name</Label>
+                <Input value={name} onChange={(e) => setName(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Phone number</Label>
+                <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Address watermark</Label>
+                <Input value={address} onChange={(e) => setAddress(e.target.value)} />
+              </div>
               <div className="space-y-1.5">
                 <Label>Format</Label>
                 <div className="flex gap-2">
@@ -70,7 +92,9 @@ export function TemplateModal({
                 size="lg"
                 onClick={() => {
                   onDownload?.(template);
-                  toast.success("Creative ready", { description: `${template.title} (${format}) saved to My Downloads.` });
+                  toast.success("Creative ready", {
+                    description: `${template.title} (${format}) saved to My Downloads.`,
+                  });
                   onClose();
                 }}
               >

@@ -29,6 +29,7 @@ import { Label } from "@/components/ui/label";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import {
+  canCleanUpFailedUploads,
   createRetailerLink,
   createWhatsAppShareUrl,
   issueRetailerInvitation,
@@ -124,8 +125,8 @@ function Page() {
               const { data, error } = await client.storage
                 .from("profile-assets")
                 .createSignedUrl(path, 3600);
-              if (error) throw error;
-              return data.signedUrl;
+              if (error) return null;
+              return data?.signedUrl ?? null;
             }),
           );
           return {
@@ -136,9 +137,11 @@ function Page() {
         }),
       );
       setRecords(hydrated);
-    } catch {
+    } catch (cause) {
       setLoadError(
-        "Retailer network could not be loaded. Apply the retailer network migration and try again.",
+        cause && typeof cause === "object" && "message" in cause
+          ? `Retailer network could not be loaded: ${String(cause.message)}`
+          : "Retailer network could not be loaded. Try again.",
       );
       setRecords([]);
     } finally {
@@ -218,7 +221,7 @@ function Page() {
       businessLogoPath: "",
     };
     let invitationRequestStarted = false;
-    let invitationRequestResponded = false;
+    let invitationResponseStatus: number | undefined;
     setCreating(true);
     try {
       const { data: verified, error: verifyError } = await client.auth.getUser();
@@ -248,7 +251,7 @@ function Page() {
         },
         async (token, photoPath, businessLogoPath) => {
           invitationRequestStarted = true;
-          const { error } = await client.rpc("create_retailer_invitation", {
+          const { error, status } = await client.rpc("create_retailer_invitation", {
             p_token: token,
             p_retailer_name: values.name.trim(),
             p_mobile_number: values.phone.trim(),
@@ -257,7 +260,7 @@ function Page() {
             p_profile_photo_path: photoPath,
             p_business_logo_path: businessLogoPath,
           });
-          invitationRequestResponded = true;
+          invitationResponseStatus = status;
           if (error) throw new Error(`Invitation could not be saved: ${error.message}`);
         },
       );
@@ -268,7 +271,10 @@ function Page() {
       await loadNetwork();
       toast.success("Invitation link created. Share it with the retailer to continue.");
     } catch (cause) {
-      if (uploadedPaths.length && (!invitationRequestStarted || invitationRequestResponded)) {
+      if (
+        uploadedPaths.length &&
+        canCleanUpFailedUploads(invitationRequestStarted, invitationResponseStatus)
+      ) {
         const { error: cleanupError } = await client.storage
           .from("profile-assets")
           .remove(uploadedPaths);

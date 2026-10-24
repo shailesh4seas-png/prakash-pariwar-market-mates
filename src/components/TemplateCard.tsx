@@ -2,10 +2,25 @@ import { Bookmark } from "lucide-react";
 import type { Template } from "@/lib/data";
 import { cn } from "@/lib/utils";
 
-export function TemplatePoster({ t, className, overlay }: { t: Template; className?: string; overlay?: React.ReactNode }) {
+export function TemplatePoster({
+  t,
+  className,
+  overlay,
+}: {
+  t: Template;
+  className?: string;
+  overlay?: React.ReactNode;
+}) {
   return (
     <div className={cn("relative aspect-square overflow-hidden rounded-xl bg-muted", className)}>
-      <img src={t.image} alt={t.title} loading="lazy" width={768} height={768} className="h-full w-full object-cover" />
+      <img
+        src={t.image}
+        alt={t.title}
+        loading="lazy"
+        width={768}
+        height={768}
+        className="h-full w-full object-cover"
+      />
       <div className="absolute inset-0 bg-gradient-to-b from-foreground/70 via-transparent to-transparent" />
       <div className="absolute inset-x-0 top-0 p-3 pr-11">
         <p className="font-display text-lg font-semibold leading-tight text-primary-foreground drop-shadow sm:text-xl">
