@@ -58,7 +58,10 @@ export function createInvitationToken(cryptoApi: Pick<Crypto, "getRandomValues">
 }
 
 export function canCleanUpFailedUploads(requestStarted: boolean, responseStatus?: number) {
-  return !requestStarted || (responseStatus !== undefined && responseStatus >= 400 && responseStatus < 500);
+  return (
+    !requestStarted ||
+    (responseStatus !== undefined && responseStatus >= 400 && responseStatus < 500)
+  );
 }
 
 export function createRetailerLink(

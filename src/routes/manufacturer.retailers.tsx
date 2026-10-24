@@ -271,7 +271,10 @@ function Page() {
       await loadNetwork();
       toast.success("Invitation link created. Share it with the retailer to continue.");
     } catch (cause) {
-      if (uploadedPaths.length && canCleanUpFailedUploads(invitationRequestStarted, invitationResponseStatus)) {
+      if (
+        uploadedPaths.length &&
+        canCleanUpFailedUploads(invitationRequestStarted, invitationResponseStatus)
+      ) {
         const { error: cleanupError } = await client.storage
           .from("profile-assets")
           .remove(uploadedPaths);

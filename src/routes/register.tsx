@@ -150,7 +150,8 @@ function Register() {
   }, [authUser, invite, navigate, ready, referral, refreshAuthUser, user]);
 
   useEffect(() => {
-    if (!ready || !authUser || !invite || referral || user?.roles.includes("retailer") || !supabase) return;
+    if (!ready || !authUser || !invite || referral || user?.roles.includes("retailer") || !supabase)
+      return;
     let active = true;
     void supabase
       .rpc("get_retailer_invitation_context", { p_token: invite })
