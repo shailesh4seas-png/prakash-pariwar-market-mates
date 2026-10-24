@@ -64,6 +64,9 @@ export function canCleanUpFailedUploads(requestStarted: boolean, responseStatus?
   );
 }
 
+// Used when VITE_PUBLIC_APP_URL is not injected (for example in the Lovable preview).
+export const DEFAULT_PUBLIC_APP_URL = "https://prakash-pariwar-market-mates.lovable.app";
+
 export function createRetailerLink(
   path: string,
   kind: "invite" | "referral",

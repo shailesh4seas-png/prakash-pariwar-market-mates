@@ -31,6 +31,7 @@ import { supabase } from "@/lib/supabase";
 import {
   canCleanUpFailedUploads,
   createRetailerLink,
+  DEFAULT_PUBLIC_APP_URL,
   createWhatsAppShareUrl,
   issueRetailerInvitation,
   validateRetailerInvitation,
@@ -84,7 +85,8 @@ const EMPTY_INVITE: RetailerInvitationValues = {
   photo: null,
   businessLogo: null,
 };
-const PUBLIC_APP_URL = import.meta.env["VITE_PUBLIC_APP_URL"] as string | undefined;
+const PUBLIC_APP_URL =
+  (import.meta.env["VITE_PUBLIC_APP_URL"] as string | undefined)?.trim() || DEFAULT_PUBLIC_APP_URL;
 
 function Page() {
   const { authUser, user } = useSession();
