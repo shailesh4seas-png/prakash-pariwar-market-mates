@@ -325,9 +325,11 @@ function Register() {
             " Uploaded images could not be cleaned up; please contact support if this persists.";
       }
       setSubmitError(
-        (error instanceof Error
-          ? error.message
-          : "Registration could not be saved. Please try again.") + cleanupMessage,
+        profileSaved
+          ? "Your registration was saved, but your account could not be reloaded. Go to sign in to reload your account; do not register again."
+          : (error instanceof Error
+              ? error.message
+              : "Registration could not be saved. Please try again.") + cleanupMessage,
       );
     } finally {
       registrationInFlight.current = false;

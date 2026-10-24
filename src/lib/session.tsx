@@ -230,7 +230,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       window.setTimeout(() => {
         void sync(session?.user ?? null);
       }, 0);
@@ -273,7 +274,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const switchRole = useCallback(
     (role: Role) => {
-      if (!user || !user.roles.includes(role)) return false;
+      if (!user || resolveRole(user.roles, role) !== role) return false;
       const profile = profiles.find((item) => item.role === role) ?? null;
       const name = profile?.full_name ?? user.name;
       setActiveRole(role);

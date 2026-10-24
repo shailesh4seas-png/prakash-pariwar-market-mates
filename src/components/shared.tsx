@@ -23,6 +23,8 @@ const TONE: Record<string, string> = {
   live: "bg-success/15 text-success",
   draft: "bg-warning/20 text-gold-foreground",
   pending: "bg-warning/20 text-gold-foreground",
+  "Pending Invitation": "bg-warning/20 text-gold-foreground",
+  revoked: "bg-destructive/15 text-destructive",
   scheduled: "bg-accent text-accent-foreground",
   archived: "bg-muted text-muted-foreground",
   completed: "bg-muted text-muted-foreground",

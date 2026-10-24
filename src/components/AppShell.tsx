@@ -110,8 +110,8 @@ export function AppShell({ role, items, children }: { role: Role; items: NavItem
             role="status"
             className="mb-5 rounded-lg border border-gold/40 bg-gold/10 px-4 py-3 text-sm text-foreground"
           >
-            Prototype data: templates, campaigns, analytics, retailer networks, Brand Kits,
-            settings, and creative downloads are sample or local-only and are not saved to Supabase.
+            Templates, campaigns, analytics and creative downloads use sample data. Retailer
+            invitations, registrations and network changes are saved to your business account.
           </p>
           {children}
         </main>
