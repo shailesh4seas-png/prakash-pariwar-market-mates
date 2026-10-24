@@ -13,7 +13,11 @@ function SessionConsumer() {
 
 describe("session provider wiring", () => {
   it("provides session state to nested route consumers", async () => {
-    render(<SessionProvider><SessionConsumer /></SessionProvider>);
+    render(
+      <SessionProvider>
+        <SessionConsumer />
+      </SessionProvider>,
+    );
     expect(await screen.findByText("Session ready")).toBeInTheDocument();
   });
 
