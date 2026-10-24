@@ -40,7 +40,7 @@ export function validateRegistration(values: RegistrationValues, _role: Role): R
         .string()
         .trim()
         .max(field === "email" ? 255 : 200)
-        .refine((value) => !/[\u0000-\u001f]/.test(value))
+        .refine((value) => Array.from(value).every((character) => character.charCodeAt(0) >= 32))
         .safeParse(values[field]).success
     )
       errors[field] = "Text is too long or contains invalid characters.";

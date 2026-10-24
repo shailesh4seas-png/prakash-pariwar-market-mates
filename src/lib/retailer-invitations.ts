@@ -25,7 +25,7 @@ export function validateRetailerInvitation(
         .string()
         .trim()
         .max(200)
-        .refine((value) => !/[\u0000-\u001f]/.test(value))
+        .refine((value) => Array.from(value).every((character) => character.charCodeAt(0) >= 32))
         .safeParse(values[field]).success
     )
       errors[field] = "Use 200 characters or fewer without control characters.";
@@ -55,6 +55,10 @@ export function validateRetailerInvitation(
 export function createInvitationToken(cryptoApi: Pick<Crypto, "getRandomValues"> = crypto) {
   const bytes = cryptoApi.getRandomValues(new Uint8Array(32));
   return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+export function canCleanUpFailedUploads(requestStarted: boolean, responseStatus?: number) {
+  return !requestStarted || (responseStatus !== undefined && responseStatus >= 400 && responseStatus < 500);
 }
 
 export function createRetailerLink(

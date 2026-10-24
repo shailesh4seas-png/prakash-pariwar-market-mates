@@ -9,6 +9,7 @@ import {
 } from "@/lib/registration";
 import { ROLE_LABEL, type Role, useSession } from "@/lib/session";
 import { SUPABASE_SETUP_MESSAGE, supabase } from "@/lib/supabase";
+import { canCleanUpFailedUploads } from "@/lib/retailer-invitations";
 
 export const Route = createFileRoute("/register")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -149,13 +150,13 @@ function Register() {
   }, [authUser, invite, navigate, ready, referral, refreshAuthUser, user]);
 
   useEffect(() => {
-    if (!ready || !authUser || !invite || referral || !supabase) return;
+    if (!ready || !authUser || !invite || referral || user?.roles.includes("retailer") || !supabase) return;
     let active = true;
     void supabase
       .rpc("get_retailer_invitation_context", { p_token: invite })
       .then(({ data, error }) => {
         if (!active) return;
-        if (error) {
+        if (error || !data) {
           setSubmitError("This invitation is expired, revoked, already used, or invalid.");
           return;
         }
@@ -176,7 +177,7 @@ function Register() {
     return () => {
       active = false;
     };
-  }, [authUser, invite, ready, referral]);
+  }, [authUser, invite, ready, referral, user]);
 
   useEffect(() => {
     if (!ready || !authUser || !user || (!invite && !referral) || (invite && referral)) return;
@@ -231,7 +232,7 @@ function Register() {
     const uploadedPaths: string[] = [];
     let profileSaved = false;
     let persistenceAttempted = false;
-    let persistenceResponded = false;
+    let persistenceResponseStatus: number | undefined;
     try {
       const { data: verified, error: verifyError } = await client.auth.getUser();
       if (
@@ -264,7 +265,7 @@ function Register() {
       const photoPath = await upload(values.profilePhoto, "profile-photo");
       if ((invite && !referral) || (referral && !invite)) {
         persistenceAttempted = true;
-        const { error } = await client.rpc("complete_retailer_registration", {
+        const { error, status } = await client.rpc("complete_retailer_registration", {
           p_invitation_token: invite ?? null,
           p_referral_token: referral ?? null,
           p_full_name: values.name.trim(),
@@ -278,11 +279,11 @@ function Register() {
           p_profile_photo_path: photoPath,
           p_accepted_policies: values.acceptedPolicies,
         });
-        persistenceResponded = true;
+        persistenceResponseStatus = status;
         if (error) throw error;
       } else {
         persistenceAttempted = true;
-        const { error } = await client.from("user_profiles").insert({
+        const { error, status } = await client.from("user_profiles").insert({
           user_id: verified.user.id,
           role,
           full_name: values.name.trim(),
@@ -298,7 +299,7 @@ function Register() {
           accepted_policies: true,
           terms_accepted_at: new Date().toISOString(),
         });
-        persistenceResponded = true;
+        persistenceResponseStatus = status;
         if (error) throw error;
       }
       profileSaved = true;
@@ -313,7 +314,7 @@ function Register() {
       if (
         !profileSaved &&
         uploadedPaths.length &&
-        (!persistenceAttempted || persistenceResponded)
+        canCleanUpFailedUploads(persistenceAttempted, persistenceResponseStatus)
       ) {
         const { error: cleanupError } = await client.storage
           .from("profile-assets")
