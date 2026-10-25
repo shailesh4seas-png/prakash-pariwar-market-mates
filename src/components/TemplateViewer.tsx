@@ -71,7 +71,7 @@ export function TemplateViewer({ template, open, onOpenChange }: TemplateViewerP
   const content = useMemo(
     () =>
       spec && template
-        ? composeContent({ manufacturer: template.manufacturer, retailer })
+        ? composeContent({ manufacturer: template.manufacturer, retailer }, { spec })
         : undefined,
     [spec, template, retailer],
   );

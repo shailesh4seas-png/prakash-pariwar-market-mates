@@ -1,4 +1,4 @@
-import { escapeXml, renderMotifLayer } from "./motifs";
+import { escapeXml, frameLayer, heroMotifSvg, renderMotifLayer, topBand } from "./motifs";
 import { createRng } from "./prng";
 import { fitText } from "./fit";
 import { isLogoField, type PlaceholderSlot, type RenderContent, type TemplateSpec, type TextBlock } from "./types";
@@ -220,6 +220,16 @@ export function renderTemplateToSvg(
   const defs = `<defs><linearGradient id="bg-${clipId(spec, { id: "bg", field: "mfr_logo", cx: 0, cy: 0, w: 0, h: 0, style: "pill" })}" gradientUnits="objectBoundingBox" x1="${g.x1}" y1="${g.y1}" x2="${g.x2}" y2="${g.y2}">${bgStops}</linearGradient></defs>`;
 
   const motifLayer = renderMotifLayer(spec.motifs, rng, W, H, spec.palette, spec.variant);
+  // Festival-specific arrangement: corner ornaments or a top garland band, plus
+  // one large hero emblem near the bottom (the poster's signature artwork).
+  const primary = spec.motifs[0];
+  const arrangement =
+    spec.decoKind === "frame" && primary
+      ? frameLayer(primary, W, H, spec.palette)
+      : spec.decoKind === "band" && primary
+        ? topBand(primary, W, H, spec.palette)
+        : "";
+  const hero = spec.heroMotif ? heroMotifSvg(spec.heroMotif, W, H, spec.palette) : "";
   const scrimRect =
     spec.background.scrim > 0
       ? `<rect width="${W}" height="${H}" fill="#000000" opacity="${n(spec.background.scrim)}"/>`
@@ -239,6 +249,8 @@ export function renderTemplateToSvg(
     defs +
     `<rect width="${W}" height="${H}" fill="url(#${bgId})"/>` +
     `<g>${motifLayer}</g>` +
+    `<g>${arrangement}</g>` +
+    `<g>${hero}</g>` +
     scrimRect +
     blocks +
     slots +

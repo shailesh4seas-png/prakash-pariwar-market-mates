@@ -204,10 +204,13 @@ function Overview() {
                 <div className="aspect-square w-full overflow-hidden rounded-xl">
                   <TemplateSvg
                     spec={t.spec}
-                    content={composeContent({
-                      manufacturer: brand,
-                      retailer: { businessName: "Your Store" },
-                    })}
+                    content={composeContent(
+                      {
+                        manufacturer: brand,
+                        retailer: { businessName: "Your Store" },
+                      },
+                      { spec: t.spec },
+                    )}
                     className="h-full w-full"
                     ariaLabel={t.title}
                   />

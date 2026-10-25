@@ -7,7 +7,10 @@ import {
   type PlaceholderField,
   type PlaceholderSlot,
   type ResolvedValue,
+  type ValueOverrides,
 } from "./types";
+
+export type { ValueOverrides };
 
 /** Minimal profile shape the auto-fill needs (subset of user_profiles + signed logo). */
 export interface BrandProfile {
@@ -22,9 +25,6 @@ export interface AutoFillInput {
   manufacturer: BrandProfile;
   retailer: BrandProfile;
 }
-
-/** Manual edits (from the editor / retailer nudge) win over auto-filled profile data. */
-export type ValueOverrides = Partial<Record<PlaceholderField, { text?: string; logoUrl?: string }>>;
 
 function textFor(field: PlaceholderField, p: BrandProfile): string {
   switch (field) {

@@ -92,7 +92,7 @@ function Page() {
                     >
                       <TemplateSvg
                         spec={template.spec}
-                        content={composeContent({ manufacturer: template.manufacturer, retailer })}
+                        content={composeContent({ manufacturer: template.manufacturer, retailer }, { spec: template.spec })}
                         className="h-full w-full"
                       />
                     </button>

@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/select";
 import { TemplateSvg, composeContent } from "@/components/TemplateSvg";
 import { PlaceholderEditor } from "@/components/PlaceholderEditor";
+import { BrandDetailsPanel } from "@/components/BrandDetailsPanel";
 import { SendToRetailersDialog } from "@/components/SendToRetailersDialog";
 import {
   MANUFACTURER_FIELDS,
@@ -42,7 +43,9 @@ import {
   type PlaceholderField,
   type TemplateSpec,
   type TextRole,
+  type ValueOverrides,
 } from "@/lib/templateEngine";
+import { STORAGE_PATH_PREFIX, resolveLogoSrc } from "@/lib/template-assets";
 import { useSession } from "@/lib/session";
 import {
   brandFromProfile,
@@ -124,10 +127,44 @@ function Page() {
   const [sendOpen, setSendOpen] = useState(false);
 
   const manufacturer = useMemo(() => brandFromProfile(activeProfile), [activeProfile]);
-  const content = useMemo(
-    () => (spec ? composeContent({ manufacturer, retailer: { businessName: "Your Store" } }) : undefined),
-    [spec, manufacturer],
+
+  // Newly-uploaded logos live as private `storage:` paths; sign them for the
+  // live preview (saved templates re-sign on read in the data layer).
+  const [resolvedLogos, setResolvedLogos] = useState<Record<string, string>>({});
+  const storageLogoKey = useMemo(
+    () =>
+      Object.entries(spec?.valueOverrides ?? {})
+        .filter(([, v]) => v.logoUrl?.startsWith(STORAGE_PATH_PREFIX))
+        .map(([f, v]) => `${f}=${v.logoUrl}`)
+        .join("|"),
+    [spec],
   );
+  useEffect(() => {
+    let alive = true;
+    for (const part of storageLogoKey.split("|").filter(Boolean)) {
+      const [field, ...rest] = part.split("=");
+      const path = rest.join("=");
+      void resolveLogoSrc(path).then((url) => {
+        if (alive && url) setResolvedLogos((prev) => ({ ...prev, [field!]: url }));
+      });
+    }
+    return () => {
+      alive = false;
+    };
+  }, [storageLogoKey]);
+
+  const content = useMemo(() => {
+    if (!spec) return undefined;
+    const overrides: ValueOverrides = { ...spec.valueOverrides };
+    for (const [field, url] of Object.entries(resolvedLogos)) {
+      const key = field as PlaceholderField;
+      overrides[key] = { ...overrides[key], logoUrl: url };
+    }
+    return composeContent(
+      { manufacturer, retailer: { businessName: "Your Store" } },
+      { spec, overrides },
+    );
+  }, [spec, manufacturer, resolvedLogos]);
 
   if (!spec) {
     return (
@@ -172,7 +209,7 @@ function Page() {
     <>
       <PageHeader
         title={id ? `Edit · ${title}` : "New template"}
-        desc="Drag the branded placeholders to fine-tune the layout, then save, send or publish."
+        desc="Type your brand details on the right and the canvas updates live — drag placeholders to fine-tune, then save, send or publish."
         action={
           <div className="flex flex-wrap gap-2">
             <Button
@@ -234,6 +271,9 @@ function Page() {
         </Panel>
 
         <div className="space-y-6">
+          {spec && (
+            <BrandDetailsPanel spec={spec} onSpecChange={setSpec} manufacturer={manufacturer} />
+          )}
           <Panel title="Details">
             <div className="space-y-4">
               <div className="space-y-1.5">

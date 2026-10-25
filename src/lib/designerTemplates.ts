@@ -8,7 +8,8 @@
  * logos go through short-lived signed URLs from the `profile-assets` bucket.
  */
 import { supabase } from "@/lib/supabase";
-import type { CanvasKind, TemplateSpec } from "@/lib/templateEngine";
+import { STORAGE_PATH_PREFIX } from "@/lib/template-assets";
+import type { CanvasKind, PlaceholderField, TemplateSpec } from "@/lib/templateEngine";
 
 export interface BrandProfileView {
   businessName: string;
@@ -126,6 +127,30 @@ async function signLogo(path: string | null | undefined): Promise<string | undef
   }
 }
 
+/**
+ * Brand details typed in the editor may store a logo as a private
+ * `storage:path` reference; swap those for fresh signed URLs on read so the
+ * spec stays valid forever while the image renders today.
+ */
+async function resolveSpecLogos(spec: TemplateSpec): Promise<TemplateSpec> {
+  if (!spec || typeof spec !== "object") return spec;
+  const entries = Object.entries(spec.valueOverrides ?? {}) as [
+    PlaceholderField,
+    { text?: string; logoUrl?: string },
+  ][];
+  const logoEntries = entries.filter(([, v]) => v.logoUrl?.startsWith(STORAGE_PATH_PREFIX));
+  if (!logoEntries.length) return spec;
+  const signed = await Promise.all(
+    logoEntries.map(([, v]) => signLogo(v.logoUrl!.slice(STORAGE_PATH_PREFIX.length))),
+  );
+  const valueOverrides = { ...spec.valueOverrides };
+  logoEntries.forEach(([field], i) => {
+    const url = signed[i];
+    if (url) valueOverrides[field] = { ...valueOverrides[field], logoUrl: url };
+  });
+  return { ...spec, valueOverrides };
+}
+
 type ReceivedRow = {
   template_id: string;
   manufacturer_user_id: string;
@@ -152,27 +177,29 @@ export async function listReceivedTemplates(): Promise<ReceivedTemplate[]> {
   if (error) throw error;
   const rows = (data ?? []) as ReceivedRow[];
   const logoUrls = await Promise.all(rows.map((r) => signLogo(r.mfr_logo_path)));
-  return rows.map((r, i) => ({
-    templateId: r.template_id,
-    manufacturerUserId: r.manufacturer_user_id,
-    manufacturer: {
-      businessName: r.mfr_business_name ?? "Manufacturer",
-      ...(r.mfr_phone ? { phone: r.mfr_phone } : {}),
-      ...(r.mfr_email ? { email: r.mfr_email } : {}),
-      ...(logoUrls[i] ? { logoUrl: logoUrls[i] } : {}),
-    },
-    categoryKey: r.category_key,
-    canvasKind: r.canvas_kind,
-    spec: r.spec,
-    headline: r.headline,
-    subheadline: r.subheadline,
-    offerText: r.offer_text,
-    ctaText: r.cta_text,
-    sentAt: r.sent_at,
-    seenAt: r.seen_at,
-    isPublished: r.is_published,
-    isSaved: r.is_saved,
-  }));
+  return Promise.all(
+    rows.map(async (r, i) => ({
+      templateId: r.template_id,
+      manufacturerUserId: r.manufacturer_user_id,
+      manufacturer: {
+        businessName: r.mfr_business_name ?? "Manufacturer",
+        ...(r.mfr_phone ? { phone: r.mfr_phone } : {}),
+        ...(r.mfr_email ? { email: r.mfr_email } : {}),
+        ...(logoUrls[i] ? { logoUrl: logoUrls[i] } : {}),
+      },
+      categoryKey: r.category_key,
+      canvasKind: r.canvas_kind,
+      spec: await resolveSpecLogos(r.spec),
+      headline: r.headline,
+      subheadline: r.subheadline,
+      offerText: r.offer_text,
+      ctaText: r.cta_text,
+      sentAt: r.sent_at,
+      seenAt: r.seen_at,
+      isPublished: r.is_published,
+      isSaved: r.is_saved,
+    })),
+  );
 }
 
 type ManufacturerRow = {
@@ -196,22 +223,24 @@ type ManufacturerRow = {
 export async function listManufacturerTemplates(): Promise<ManufacturerTemplate[]> {
   const { data, error } = await client().rpc("list_manufacturer_templates");
   if (error) throw error;
-  return ((data ?? []) as ManufacturerRow[]).map((r) => ({
-    id: r.id,
-    categoryKey: r.category_key,
-    title: r.title,
-    canvasKind: r.canvas_kind,
-    spec: r.spec,
-    headline: r.headline,
-    subheadline: r.subheadline,
-    offerText: r.offer_text,
-    ctaText: r.cta_text,
-    published: r.published,
-    sentCount: Number(r.sent_count),
-    downloads: Number(r.downloads),
-    saves: Number(r.saves),
-    updatedAt: r.updated_at,
-  }));
+  return Promise.all(
+    ((data ?? []) as ManufacturerRow[]).map(async (r) => ({
+      id: r.id,
+      categoryKey: r.category_key,
+      title: r.title,
+      canvasKind: r.canvas_kind,
+      spec: await resolveSpecLogos(r.spec),
+      headline: r.headline,
+      subheadline: r.subheadline,
+      offerText: r.offer_text,
+      ctaText: r.cta_text,
+      published: r.published,
+      sentCount: Number(r.sent_count),
+      downloads: Number(r.downloads),
+      saves: Number(r.saves),
+      updatedAt: r.updated_at,
+    })),
+  );
 }
 
 type RecipientRow = {

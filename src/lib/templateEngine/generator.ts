@@ -1,8 +1,14 @@
 import { getPalette } from "./palettes";
 import { LAYOUTS, LAYOUT_COUNT, type Copy } from "./layouts";
-import { getCategory, type TemplateCategory } from "./catalog";
+import { getCategory, layoutsFor, type TemplateCategory } from "./catalog";
 import { createRng } from "./prng";
-import { CANVAS, type CanvasKind, type MotifId, type TemplateSpec } from "./types";
+import {
+  CANVAS,
+  type CanvasKind,
+  type DecoKind,
+  type MotifId,
+  type TemplateSpec,
+} from "./types";
 
 export const TEMPLATES_PER_CATEGORY = 30;
 
@@ -54,10 +60,15 @@ export function generateTemplate(
   const category = getCategory(categoryKey);
   if (!category) throw new Error(`Unknown category: ${categoryKey}`);
 
-  const layoutIndex = ((index % LAYOUT_COUNT) + LAYOUT_COUNT) % LAYOUT_COUNT;
+  // Each category curates its own layout rotation (festival-specific designs
+  // first); unknown ids fall back to the generic cycle so the engine is safe.
+  const rotation = layoutsFor(category);
+  const wanted = rotation[index % rotation.length]!;
+  const byId = LAYOUTS.findIndex((build) => build(getPalette(category.paletteIds[0]!), { headline: "h", subheadline: "s", offer: "o", cta: "c" }).id === wanted);
+  const layoutIndex = byId >= 0 ? byId : ((index % LAYOUT_COUNT) + LAYOUT_COUNT) % LAYOUT_COUNT;
   const paletteIds = palettesFor(category);
   const paletteId =
-    paletteIds[Math.floor(index / LAYOUT_COUNT) % paletteIds.length] ?? paletteIds[0];
+    paletteIds[Math.floor(index / rotation.length) % paletteIds.length] ?? paletteIds[0];
   if (!paletteId) throw new Error(`category ${categoryKey} has no palette`);
   const palette = getPalette(paletteId);
 
@@ -75,6 +86,13 @@ export function generateTemplate(
   const motifs = pickMotifs(category.motifs, index);
   const angle = GRADIENT_ANGLES[index % GRADIENT_ANGLES.length] ?? 135;
   const scrim = index % 4 === 0 ? 0.22 : index % 2 === 0 ? 0.12 : 0.05;
+  const decoKinds: DecoKind[] = category.decoKinds?.length ? category.decoKinds : ["scatter"];
+  const decoKind = decoKinds[index % decoKinds.length]!;
+  // Poster-style designs (half the set, plus every framed one) get the big
+  // festival emblem so the theme is instantly recognisable.
+  const heroMotif = category.heroMotif && (index % 2 === 0 || decoKind === "frame")
+    ? category.heroMotif
+    : undefined;
 
   return {
     id: `${categoryKey}-${canvasKind}-${index}`,
@@ -93,6 +111,8 @@ export function generateTemplate(
     },
     blocks: composition.blocks,
     slots: composition.slots,
+    ...(heroMotif ? { heroMotif } : {}),
+    ...(decoKind === "scatter" ? {} : { decoKind }),
   };
 }
 

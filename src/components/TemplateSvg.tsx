@@ -12,14 +12,20 @@ import {
 
 /**
  * Builds the render content for a spec: auto-fills every placeholder from the
- * manufacturer + retailer brand profiles, then layers the retailer/manufacturer
- * manual overrides on top (manual wins), and applies text-copy overrides.
+ * manufacturer + retailer brand profiles, then layers the values typed into the
+ * template itself (spec.valueOverrides) and any caller overrides on top (manual
+ * wins), and applies text-copy overrides.
  */
 export function composeContent(
   input: AutoFillInput,
-  opts?: { text?: Partial<Record<TextRole, string>>; overrides?: ValueOverrides },
+  opts?: {
+    text?: Partial<Record<TextRole, string>>;
+    overrides?: ValueOverrides;
+    /** The rendered spec — its stored brand-detail overrides are applied. */
+    spec?: TemplateSpec;
+  },
 ): RenderContent {
-  const filled = autoFillAll(input, opts?.overrides);
+  const filled = autoFillAll(input, { ...opts?.spec?.valueOverrides, ...opts?.overrides });
   return {
     values: Object.values(filled),
     ...(opts?.text ? { text: opts.text } : {}),

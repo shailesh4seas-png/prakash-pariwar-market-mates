@@ -246,7 +246,7 @@ function RetailerHome() {
 
   const contents = useMemo(() => {
     const map = new Map<string, ReturnType<typeof composeContent>>();
-    for (const t of data) map.set(t.templateId, composeContent({ manufacturer: t.manufacturer, retailer }));
+    for (const t of data) map.set(t.templateId, composeContent({ manufacturer: t.manufacturer, retailer }, { spec: t.spec }));
     return map;
   }, [data, retailer]);
 
