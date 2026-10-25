@@ -11,6 +11,7 @@ import {
 
 /** Minimal profile shape the auto-fill needs (subset of user_profiles + signed logo). */
 export interface BrandProfile {
+  name?: string;
   businessName: string;
   logoUrl?: string;
   phone?: string;
@@ -28,6 +29,9 @@ export type ValueOverrides = Partial<Record<PlaceholderField, { text?: string; l
 
 function textFor(field: PlaceholderField, p: BrandProfile): string {
   switch (field) {
+    case "mfr_name":
+    case "rtl_name":
+      return (p.name ?? "").trim();
     case "mfr_business_name":
     case "rtl_business_name":
       return p.businessName.trim();

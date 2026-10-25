@@ -2,6 +2,7 @@ import { getPalette } from "./palettes";
 import { LAYOUTS, LAYOUT_COUNT, type Copy } from "./layouts";
 import { getCategory, type TemplateCategory } from "./catalog";
 import { createRng } from "./prng";
+import { themedComposition } from "./artwork";
 import { CANVAS, type CanvasKind, type MotifId, type TemplateSpec } from "./types";
 
 export const TEMPLATES_PER_CATEGORY = 30;
@@ -14,11 +15,11 @@ type CopyBank = TemplateCategory["copy"];
  * 30 templates do not read as duplicates.
  */
 function pickCopy(bank: CopyBank, index: number): Copy {
-  const headline = bank.headlines[index % bank.headlines.length] ?? bank.headlines[0]!;
+  const headline = bank.headlines[index % bank.headlines.length] ?? bank.headlines[0] ?? "Festival greetings";
   const subheadline =
-    bank.subheadlines[(index >> 1) % bank.subheadlines.length] ?? bank.subheadlines[0]!;
-  const offer = bank.offers[(index * 3) % bank.offers.length] ?? bank.offers[0]!;
-  const cta = bank.ctas[index % bank.ctas.length] ?? bank.ctas[0]!;
+    bank.subheadlines[(index >> 1) % bank.subheadlines.length] ?? bank.subheadlines[0] ?? "";
+  const offer = bank.offers[(index * 3) % bank.offers.length] ?? bank.offers[0] ?? "";
+  const cta = bank.ctas[index % bank.ctas.length] ?? bank.ctas[0] ?? "";
   return { headline, subheadline, offer, cta };
 }
 
@@ -63,12 +64,14 @@ export function generateTemplate(
 
   const canvas = CANVAS[canvasKind];
   const copy = pickCopy(category.copy, index);
-  const composition = LAYOUTS[layoutIndex]!(palette, {
+  const build = LAYOUTS[layoutIndex];
+  if (!build) throw new Error("Unknown layout");
+  const composition = themedComposition(categoryKey, index, palette, build(palette, {
     headline: copy.headline,
     subheadline: copy.subheadline,
     offer: copy.offer,
     cta: copy.cta,
-  });
+  }));
 
   const rng = createRng(`${categoryKey}:${canvasKind}:${index}`);
   void rng;
@@ -77,6 +80,7 @@ export function generateTemplate(
   const scrim = index % 4 === 0 ? 0.22 : index % 2 === 0 ? 0.12 : 0.05;
 
   return {
+    artworkVersion: 1,
     id: `${categoryKey}-${canvasKind}-${index}`,
     categoryKey,
     canvas,

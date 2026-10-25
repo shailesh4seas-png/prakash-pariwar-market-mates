@@ -1,5 +1,6 @@
 import { renderTemplateToSvg } from "./render";
 import type { RenderContent, TemplateSpec } from "./types";
+import { specArtwork } from "./artwork";
 
 /**
  * Client-side PNG export. Rasterises the exact SVG the editor shows so a
@@ -50,8 +51,22 @@ export interface ExportResult {
 export async function renderTemplateToBlob(spec: TemplateSpec, content: RenderContent = {}): Promise<ExportResult> {
   if (typeof document === "undefined") throw new Error("PNG export runs in the browser only.");
   const canvas = content.canvas ?? spec.canvas;
-  const inlined = await buildContentWithInlinedLogos(content);
-  const svg = renderTemplateToSvg(spec, inlined);
+  const merged: RenderContent = {...content, ...(content.values ? { values: content.values.map(v=>({...v,...spec.brandOverrides?.[v.field]})) } : {})};
+  const inlined = await buildContentWithInlinedLogos(merged);
+  const exportSpec = {...spec, brandOverrides: {...spec.brandOverrides}};
+  for (const [field, override] of Object.entries(exportSpec.brandOverrides)) {
+    if (override.logoUrl) {
+      const url = await inlineLogo(override.logoUrl);
+      exportSpec.brandOverrides[field as keyof typeof exportSpec.brandOverrides] = {...override, logoUrl:url ?? ''};
+    }
+  }
+  let svg = renderTemplateToSvg(exportSpec, inlined);
+  const artwork = specArtwork(spec);
+  if (artwork) {
+    const data = await inlineLogo(artwork);
+    if (!data) throw new Error('Festival artwork could not load. Please try again.');
+    svg = svg.replace(artwork, data);
+  }
 
   const blob = await new Promise<Blob>((resolve, reject) => {
     const img = new Image();

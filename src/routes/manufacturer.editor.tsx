@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/select";
 import { TemplateSvg, composeContent } from "@/components/TemplateSvg";
 import { PlaceholderEditor } from "@/components/PlaceholderEditor";
+import { BrandDetailsEditor } from "@/components/BrandDetailsEditor";
 import { SendToRetailersDialog } from "@/components/SendToRetailersDialog";
 import {
   MANUFACTURER_FIELDS,
@@ -61,15 +62,21 @@ export const Route = createFileRoute("/manufacturer/editor")({
       { title: "Template editor · Prakash Pariwar" },
       { name: "description", content: "Design a branded festival or product template." },
       { name: "robots", content: "noindex" },
+      { property: "og:title", content: "Template editor · Prakash Pariwar" },
+      { property: "og:description", content: "Personalise festival artwork with live business details." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   validateSearch: (s: Record<string, unknown>): {
     category?: string | undefined;
     index?: number | undefined;
+    canvas?: CanvasKind | undefined;
     id?: string | undefined;
   } => ({
     category: typeof s["category"] === "string" ? s["category"] : undefined,
     index: typeof s["index"] === "number" && Number.isFinite(s["index"]) ? s["index"] : undefined,
+    canvas: s["canvas"] === "story" ? "story" : "post",
     id: typeof s["id"] === "string" ? s["id"] : undefined,
   }),
   component: Page,
@@ -92,7 +99,7 @@ function initialSpec(
 }
 
 function Page() {
-  const { category, index, id } = Route.useSearch();
+  const { category, index, id, canvas } = Route.useSearch();
   const navigate = useNavigate();
   const { activeProfile } = useSession();
 
@@ -109,11 +116,11 @@ function Page() {
         setTitle(loaded.title);
       }
     } else {
-      setSpec(initialSpec(category, index, "post"));
+      setSpec(initialSpec(category, index, canvas ?? "post"));
       setTitle(`${getCategory(category ?? "diwali")?.label ?? "Festival"} template`);
     }
     // Re-seed only when the route target changes.
-  }, [id, loaded, category, index]);
+  }, [id, loaded, category, index, canvas]);
 
   const recipients = useTemplateRecipients(id ?? null);
   const sendTargets = useSendTargets(true);
@@ -125,7 +132,7 @@ function Page() {
 
   const manufacturer = useMemo(() => brandFromProfile(activeProfile), [activeProfile]);
   const content = useMemo(
-    () => (spec ? composeContent({ manufacturer, retailer: { businessName: "Your Store" } }) : undefined),
+    () => (spec ? composeContent({ manufacturer, retailer: { businessName: "Your Store" } }, { overrides: spec.brandOverrides ?? {} }) : undefined),
     [spec, manufacturer],
   );
 
@@ -172,7 +179,6 @@ function Page() {
     <>
       <PageHeader
         title={id ? `Edit · ${title}` : "New template"}
-        desc="Drag the branded placeholders to fine-tune the layout, then save, send or publish."
         action={
           <div className="flex flex-wrap gap-2">
             <Button
@@ -213,7 +219,7 @@ function Page() {
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         <Panel className="bg-muted">
           <div className="mx-auto w-full max-w-md">
-            <div className="relative aspect-square w-full overflow-hidden rounded-2xl shadow-glow">
+            <div className={`relative ${spec.canvas.kind === "story" ? "aspect-[9/16]" : "aspect-square"} w-full overflow-hidden rounded-2xl shadow-glow`}>
               <TemplateSvg
                 spec={spec}
                 content={content ?? {}}
@@ -227,13 +233,16 @@ function Page() {
                 onResize={(slotId, next) => setSpec((s) => (s ? resizeSlot(s, slotId, next) : s))}
               />
             </div>
-            <p className="mt-3 text-center text-xs text-muted-foreground">
-              Gold boxes are placeholders — drag the box, or its corner handle to resize. Arrow keys nudge.
-            </p>
           </div>
         </Panel>
 
         <div className="space-y-6">
+          <Panel>
+            <div className="space-y-6">
+              <BrandDetailsEditor owner="manufacturer" spec={spec} content={content ?? {}} onChange={setSpec}/>
+              <BrandDetailsEditor owner="retailer" spec={spec} content={content ?? {}} onChange={setSpec}/>
+            </div>
+          </Panel>
           <Panel title="Details">
             <div className="space-y-4">
               <div className="space-y-1.5">

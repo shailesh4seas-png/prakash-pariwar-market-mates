@@ -1,4 +1,7 @@
 # Retailer management completion
+- [ ] Add festival-specific varied template artwork and themed category views.
+- [ ] Add live manufacturer and retailer detail editing beside template previews.
+- [ ] Verify template generation, editing and export compatibility.
 - [x] Fix invitation visibility, validation, success context and public links.
 - [x] Review transactional database acceptance, asset visibility and revocation; preserve applied migrations.
 - [x] Fix reported errors: latest preview build OK, zero lint errors, 37 tests passed; public invitation/sign-in flow verified without browser errors.

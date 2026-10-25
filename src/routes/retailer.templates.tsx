@@ -11,6 +11,7 @@ import { useSession } from "@/lib/session";
 import type { ReceivedTemplate } from "@/lib/designerTemplates";
 import { brandFromProfile, useReceivedTemplates } from "@/lib/templateQueries";
 import { cn } from "@/lib/utils";
+import { FestivalCollectionHeader } from "@/components/FestivalCollectionHeader";
 
 export const Route = createFileRoute("/retailer/templates")({
   head: () => ({
@@ -141,6 +142,7 @@ function Page() {
           </button>
         )}
       </h2>
+      {categoryKey && <FestivalCollectionHeader categoryKey={categoryKey}/>}
 
       {received.isLoading ? (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
