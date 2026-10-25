@@ -88,7 +88,7 @@ function Page() {
   const contents = useMemo(() => {
     const map = new Map<string, ReturnType<typeof composeContent>>();
     for (const t of received.data ?? []) {
-      map.set(t.templateId, composeContent({ manufacturer: t.manufacturer, retailer }));
+      map.set(t.templateId, composeContent({ manufacturer: t.manufacturer, retailer }, { spec: t.spec }));
     }
     return map;
   }, [received.data, retailer]);

@@ -74,6 +74,58 @@ function glyph(id: MotifId, accent: string, alt: string, light: string): string 
       return `<path d="M0 -22 L5 -5 22 0 5 5 0 22 -5 5 -22 0 -5 -5Z" fill="${light}"/>`;
     case "bunting":
       return `<path d="M-30 -10 Q0 6 30 -10" stroke="${light}" stroke-width="2.5" fill="none"/><path d="M-24 -8 l0 14 12 -8Z" fill="${accent}"/><path d="M-4 -2 l0 14 12 -8Z" fill="${alt}"/><path d="M16 -6 l0 14 12 -8Z" fill="${accent}"/>`;
+    case "lotus": {
+      const petals = Array.from({ length: 5 }, (_, i) => {
+        const a = -60 + i * 30;
+        return `<path d="M0 8 Q9 -8 0 -26 Q-9 -8 0 8Z" fill="${i % 2 ? accent : alt}" transform="rotate(${n(a)})"/>`;
+      }).join("");
+      return `<path d="M-26 8 Q0 26 26 8 Q0 16 -26 8Z" fill="${alt}"/>${petals}<circle cy="2" r="5" fill="${light}"/>`;
+    }
+    case "garland": {
+      const beads = Array.from({ length: 9 }, (_, i) => {
+        const x = -28 + i * 7;
+        const y = 10 - Math.sin((i / 8) * Math.PI) * 14;
+        return `<circle cx="${n(x)}" cy="${n(y)}" r="3.6" fill="${i % 2 ? accent : alt}"/>`;
+      }).join("");
+      return `<path d="M-30 8 Q0 -14 30 8" stroke="${light}" stroke-width="2" fill="none"/>${beads}<path d="M0 12 l-5 14 h10Z" fill="${accent}"/>`;
+    }
+    case "fireworks": {
+      const rays = Array.from({ length: 10 }, (_, i) => {
+        const a = (i / 10) * 360;
+        return `<g transform="rotate(${n(a)})"><line x1="0" y1="-8" x2="0" y2="-26" stroke="${i % 2 ? accent : light}" stroke-width="2.5"/><circle cy="-30" r="2.5" fill="${alt}"/></g>`;
+      }).join("");
+      return `<circle r="4" fill="${light}"/>${rays}`;
+    }
+    case "tree":
+      return `<rect x="-4" y="18" width="8" height="12" rx="2" fill="${alt}"/><path d="M0 -30 L16 -8 L-16 -8Z" fill="${accent}"/><path d="M0 -16 L21 8 L-21 8Z" fill="${accent}"/><path d="M0 -2 L26 22 L-26 22Z" fill="${accent}"/><circle cx="-8" cy="0" r="2.5" fill="${light}"/><circle cx="9" cy="10" r="2.5" fill="${light}"/><circle cx="0" cy="-30" r="3.5" fill="${light}"/>`;
+    case "santaHat":
+      return `<path d="M-22 18 Q-6 -22 22 -26 Q10 -6 26 18Z" fill="${accent}"/><rect x="-26" y="14" width="52" height="10" rx="5" fill="${light}"/><circle cx="24" cy="-26" r="7" fill="${light}"/>`;
+    case "bell":
+      return `<path d="M-16 12 Q-16 -18 0 -22 Q16 -18 16 12Z" fill="${accent}"/><rect x="-20" y="12" width="40" height="7" rx="3.5" fill="${alt}"/><circle cy="24" r="4.5" fill="${light}"/><circle cy="-24" r="3.5" fill="${alt}"/>`;
+    case "gift":
+      return `<rect x="-20" y="-10" width="40" height="30" rx="4" fill="${accent}"/><rect x="-24" y="-16" width="48" height="10" rx="3" fill="${alt}"/><rect x="-4" y="-16" width="8" height="36" fill="${light}"/><path d="M-4 -16 Q-16 -28 -6 -28 Q-2 -24 -4 -16Z" fill="${light}"/><path d="M4 -16 Q16 -28 6 -28 Q2 -24 4 -16Z" fill="${light}"/>`;
+    case "wreath": {
+      const leaves = Array.from({ length: 12 }, (_, i) => {
+        const a = (i / 12) * 360;
+        return `<ellipse cx="0" cy="-22" rx="5.5" ry="9" fill="${accent}" transform="rotate(${n(a)})"/>`;
+      }).join("");
+      const berries = Array.from({ length: 4 }, (_, i) => {
+        const a = (i / 4) * 360 + 45;
+        const x = n(Math.cos(((a - 90) * Math.PI) / 180) * 22);
+        const y = n(Math.sin(((a - 90) * Math.PI) / 180) * 22);
+        return `<circle cx="${x}" cy="${y}" r="3.5" fill="${alt}"/>`;
+      }).join("");
+      return `<circle r="22" fill="none" stroke="${alt}" stroke-width="3"/>${leaves}${berries}<path d="M-6 26 l-8 12 h8Z" fill="${light}"/><path d="M6 26 l8 12 h-8Z" fill="${light}"/>`;
+    }
+    case "rakhi": {
+      const petals = Array.from({ length: 8 }, (_, i) => {
+        const a = (i / 8) * 360;
+        return `<ellipse cx="0" cy="-13" rx="5" ry="9" fill="${i % 2 ? accent : alt}" transform="rotate(${n(a)})"/>`;
+      }).join("");
+      return `<path d="M-32 26 Q-16 12 -8 6" stroke="${light}" stroke-width="3" fill="none"/><path d="M32 26 Q16 12 8 6" stroke="${light}" stroke-width="3" fill="none"/>${petals}<circle r="6.5" fill="${light}"/>`;
+    }
+    case "moon":
+      return `<path d="M10 -24 A24 24 0 1 0 10 24 A18 18 0 1 1 10 -24Z" fill="${accent}"/><circle cx="20" cy="-18" r="2.5" fill="${light}"/><circle cx="26" cy="-6" r="2" fill="${alt}"/>`;
     default:
       return "";
   }
@@ -142,4 +194,40 @@ export function motifEmblem(id: MotifId, palette: Palette, size = 64): string {
   const c = size / 2;
   const s = size / 96;
   return `<svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg"><g transform="translate(${n(c)} ${n(c)}) scale(${n(s * 1.6)})">${glyph(id, palette.accent, palette.accentAlt, palette.text)}</g></svg>`;
+}
+
+/** Ornaments mirrored around the vertical axis at the four corners + top edge. */
+export function frameLayer(id: MotifId, W: number, H: number, palette: Palette): string {
+  const s = Math.min(W, H) / 260;
+  const gx = Math.min(W, H) * 0.11;
+  const at = (x: number, y: number, rot: number) =>
+    `<g transform="translate(${n(x)} ${n(y)}) rotate(${n(rot)}) scale(${n(s * 1.35)})" opacity="0.75">${glyph(id, palette.accent, palette.accentAlt, palette.text)}</g>`;
+  return (
+    at(gx, gx, -20) +
+    at(W - gx, gx, 20) +
+    at(gx, H - gx, -160) +
+    at(W - gx, H - gx, 160) +
+    at(W / 2, gx * 0.7, 0)
+  );
+}
+
+/** A festive garland strip repeated across the top edge. */
+export function topBand(id: MotifId, W: number, H: number, palette: Palette): string {
+  const s = Math.min(W, H) / 240;
+  const cols = Math.max(4, Math.round(W / (s * 96)));
+  const parts: string[] = [];
+  for (let i = 0; i < cols; i++) {
+    const x = ((i + 0.5) / cols) * W;
+    const y = H * 0.045 + (i % 2 ? s * 10 : 0);
+    parts.push(
+      `<g transform="translate(${n(x)} ${n(y)}) scale(${n(s)})" opacity="0.85">${glyph(id, palette.accent, palette.accentAlt, palette.text)}</g>`,
+    );
+  }
+  return parts.join("");
+}
+
+/** One large bottom-centre emblem (the poster's festival hero art). */
+export function heroMotifSvg(id: MotifId, W: number, H: number, palette: Palette): string {
+  const s = (Math.min(W, H) * 0.42) / 60;
+  return `<g transform="translate(${n(W / 2)} ${n(H * 0.84)}) scale(${n(s)})" opacity="0.95">${glyph(id, palette.accent, palette.accentAlt, palette.text)}</g>`;
 }

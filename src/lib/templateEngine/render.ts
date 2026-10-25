@@ -1,4 +1,4 @@
-import { escapeXml, renderMotifLayer } from "./motifs";
+import { escapeXml, frameLayer, heroMotifSvg, renderMotifLayer, topBand } from "./motifs";
 import { createRng } from "./prng";
 import { artworkTextColor, specArtwork } from "./artwork";
 import { fitText } from "./fit";
@@ -225,6 +225,17 @@ export function renderTemplateToSvg(
   const motifLayer = renderMotifLayer(spec.motifs, rng, W, H, spec.palette, spec.variant);
   const artwork = specArtwork(spec);
   const artworkLayer = artwork ? `<image href="${escapeXml(artwork)}" width="${W}" height="${H}" preserveAspectRatio="none"/>` : "";
+  // Festival-specific arrangement: corner ornaments or a top garland band, plus
+  // one large hero emblem near the bottom (the poster's signature artwork).
+  // Photo-artwork templates skip these layers so the artwork stays unobscured.
+  const primary = spec.motifs[0];
+  const arrangement =
+    spec.decoKind === "frame" && primary
+      ? frameLayer(primary, W, H, spec.palette)
+      : spec.decoKind === "band" && primary
+        ? topBand(primary, W, H, spec.palette)
+        : "";
+  const hero = spec.heroMotif ? heroMotifSvg(spec.heroMotif, W, H, spec.palette) : "";
   const scrimRect =
     spec.background.scrim > 0
       ? `<rect width="${W}" height="${H}" fill="#000000" opacity="${n(spec.background.scrim)}"/>`
@@ -244,7 +255,9 @@ export function renderTemplateToSvg(
     defs +
     `<rect width="${W}" height="${H}" fill="url(#${bgId})"/>` +
     artworkLayer +
-    (artwork ? `<rect y="0" width="${W}" height="${H*0.18}" fill="${spec.palette.bgFrom}" opacity="0.16"/><rect y="${H*0.80}" width="${W}" height="${H*0.20}" fill="${spec.palette.bgFrom}" opacity="0.16"/>` : `<g>${motifLayer}</g>` + scrimRect) +
+    (artwork
+      ? `<rect y="0" width="${W}" height="${H * 0.18}" fill="${spec.palette.bgFrom}" opacity="0.16"/><rect y="${H * 0.80}" width="${W}" height="${H * 0.20}" fill="${spec.palette.bgFrom}" opacity="0.16"/>`
+      : `<g>${motifLayer}</g><g>${arrangement}</g><g>${hero}</g>` + scrimRect) +
     blocks +
     slots +
     `</svg>`

@@ -1,4 +1,5 @@
-import type { MotifId } from "./types";
+import type { DecoKind, MotifId, Palette } from "./types";
+import { getPalette } from "./palettes";
 
 export type CategoryKind = "festival" | "season";
 
@@ -21,6 +22,12 @@ export interface TemplateCategory {
     offers: string[];
     ctas: string[];
   };
+  /** Layout ids this category cycles through (defaults to the generic ten). */
+  layoutRotation?: string[];
+  /** Large bottom emblem for poster-style designs. */
+  heroMotif?: MotifId;
+  /** Decoration arrangements cycled across the 30 designs. */
+  decoKinds?: DecoKind[];
 }
 
 const F = (
@@ -44,11 +51,11 @@ const S = (
 ): TemplateCategory => ({ key, label, kind: "season", emblem, motifs, paletteIds, date, copy });
 
 export const CATEGORIES: TemplateCategory[] = [
-  F("diwali", "Diwali", "2026-11-08", "diya", ["diya", "rangoli", "lantern", "sparkles"], ["diwaliGold", "maroonRoyal", "peacockFestive"], {
-    headlines: ["Happy Diwali", "Festival of Lights", "Diwali Dhamaka", "Light Up Your Home", "Shubh Diwali"],
-    subheadlines: ["Sparkling new deals", "The brightest offers of the year", "Celebrate with savings", "Gifting made easy"],
-    offers: ["Up to 50% Off", "Flat ₹5000 Cashback", "Buy 1 Get 1", "Mega Diwali Sale", "Extra 10% Off"],
-    ctas: ["Shop the Sale", "Visit Store Today", "Order Now", "Grab the Deal"],
+  F("diwali", "Diwali", "2026-11-08", "diya", ["lotus", "diya", "garland", "rangoli", "sparkles"], ["diwaliGold", "diwaliMarigold", "diwaliRoyalBlue"], {
+    headlines: ["Happy Diwali", "Festival of Lights", "Diwali Dhamaka", "Light Up Your Home", "Shubh Diwali", "Diwali Grand Sale", "Sparkle This Diwali", "The Grand Diwali Utsav", "Diwali Ki Safai", "Glow With Joy"],
+    subheadlines: ["Wishing you happiness, peace, prosperity and beautiful memories", "Sparkling new deals", "The brightest offers of the year", "Celebrate with savings", "Gifting made easy", "New collection, new vibes", "Light up your home for less", "Your festive shopping starts here"],
+    offers: ["Up to 50% Off", "Flat ₹5000 Cashback", "Buy 1 Get 1", "Mega Diwali Sale", "Extra 10% Off", "Diwali Bonanza", "Free Gifts On All Buys", "Grand Lucky Draw"],
+    ctas: ["Shop the Sale", "Visit Store Today", "Order Now", "Grab the Deal", "Explore Collection"],
   }),
   F("dhanteras", "Dhanteras", "2026-11-06", "diya", ["diya", "sparkles", "rangoli"], ["diwaliGold", "maroonRoyal"], {
     headlines: ["Shubh Dhanteras", "Dhanteras Dhamaka", "Auspicious Beginnings"],
@@ -74,17 +81,17 @@ export const CATEGORIES: TemplateCategory[] = [
     offers: ["Flat 25% Off", "Community Sale", "Kar Sevao Deal"],
     ctas: ["Shop Now", "Visit Us"],
   }),
-  F("christmas", "Christmas", "2026-12-25", "lantern", ["lantern", "snowflake", "sparkles", "bunting"], ["christmasRed", "winterFrost"], {
-    headlines: ["Merry Christmas", "Christmas Magic", "Jingle Bell Sale"],
-    subheadlines: ["Gift joy this season", "Sparkling holiday deals", "A warm white Christmas"],
-    offers: ["Up to 60% Off", "Gift Combo", "Santa's Big Sale", "Flat ₹2000 Off"],
-    ctas: ["Shop Gifts", "Grab Now"],
+  F("christmas", "Christmas", "2026-12-25", "tree", ["tree", "wreath", "santaHat", "bell", "gift", "snowflake", "garland"], ["christmasRed", "christmasPine", "christmasGold", "winterFrost"], {
+    headlines: ["Merry Christmas", "Christmas Magic", "Jingle Bell Sale", "The Christmas Sale", "Ho Ho Ho Savings", "A Warm White Christmas", "Christmas Cheer", "Noel Festival Sale", "Santa's Gift Bazaar", "Twelve Days of Deals"],
+    subheadlines: ["Gift joy this season", "Sparkling holiday deals", "May your days be merry and bright", "Warm wishes & warmer offers", "Unwrap the savings", "Tinsel, twinkling lights & top deals", "Spread the festive cheer"],
+    offers: ["Up to 60% Off", "Gift Combo", "Santa's Big Sale", "Flat ₹2000 Off", "Stocking Stuffers Under ₹999", "Free Gift Wrapping", "Christmas Bonanza", "Egg-Hunt Deals"],
+    ctas: ["Shop Gifts", "Grab Now", "Unwrap Deals", "Visit The Store"],
   }),
-  F("newYear", "New Year", "2027-01-01", "sparkles", ["sparkles", "bunting", "lantern"], ["newYearNight", "saleBold"], {
-    headlines: ["Happy New Year", "New Year, New You", "NYE Mega Sale"],
-    subheadlines: ["Fresh beginnings", "Ring in 2027 with savings", "A brand-new season of offers"],
-    offers: ["2027 Mega Sale", "Flat 50% Off", "New Year Bonanza"],
-    ctas: ["Start Shopping", "Celebrate & Save"],
+  F("newYear", "New Year", "2027-01-01", "fireworks", ["fireworks", "sparkles", "bunting", "lantern", "gift"], ["newYearNight", "newYearGold", "newYearParty"], {
+    headlines: ["Happy New Year", "New Year, New You", "NYE Mega Sale", "Welcome 2027", "New Year Grand Sale", "Ring In The New", "A Fresh Start Awaits", "New Year Bonanza", "Cheers To New Beginnings", "The NYE Blowout"],
+    subheadlines: ["Let go of the past and start this year anew with positivity", "Fresh beginnings", "Ring in 2027 with savings", "A brand-new season of offers", "New year, new upgrades", "Start the year with a deal", "Celebrate every new beginning"],
+    offers: ["2027 Mega Sale", "Flat 50% Off", "New Year Bonanza", "Resolution Deals", "Countdown Offers", "Extra ₹2027 Off On ₹10000", "First-Week Special"],
+    ctas: ["Start Shopping", "Celebrate & Save", "Grab New Year Deals", "Visit Us Today"],
   }),
   F("lohri", "Lohri", "2027-01-13", "sun", ["sparkles", "bunting", "sun"], ["sankrantiHarvest", "maroonRoyal"], {
     headlines: ["Happy Lohri", "Lohri Night", "Bonfire Bash"],
@@ -128,11 +135,11 @@ export const CATEGORIES: TemplateCategory[] = [
     offers: ["Flat 20% Off", "Puja Essentials", "Blessed Deal"],
     ctas: ["Shop Now", "Visit Store"],
   }),
-  F("holi", "Holi", "2027-03-22", "colorSplash", ["colorSplash", "flowers", "sparkles"], ["holiBurst", "springBloom"], {
-    headlines: ["Happy Holi", "Play with Colours", "Holi Dhamaka"],
-    subheadlines: ["Splash of savings", "Colours of joy", "A vibrant celebration"],
-    offers: ["Colour Combo", "Up to 55% Off", "Holi Special"],
-    ctas: ["Celebrate Now", "Shop Colors"],
+  F("holi", "Holi", "2027-03-22", "colorSplash", ["colorSplash", "flowers", "fireworks", "sparkles"], ["holiBurst", "holiRang", "springBloom"], {
+    headlines: ["Happy Holi", "Play with Colours", "Holi Dhamaka", "Utsav of Colours", "Holi Range Pur", "Splash Into Savings", "Vibrant Holi", "Colors of Joy", "Holi Mahotsav", "Paint The Town"],
+    subheadlines: ["Splash of savings", "Colours of joy", "A vibrant celebration", "Wash the winter away", "Bright colours, brighter deals", "Celebrate the festival of colours", "Bura na mano, Holi hai"],
+    offers: ["Colour Combo", "Up to 55% Off", "Holi Special", "Free Gulal Gift Pack", "Holi Mega Sale", "Flat ₹700 Off", "Organic Colors Bundle"],
+    ctas: ["Celebrate Now", "Shop Colors", "Play Safe", "Grab Holi Deals"],
   }),
   F("goodFriday", "Easter / Good Friday", "2027-03-26", "bunting", ["bunting", "flowers", "sparkles"], ["eidGreen", "springBloom"], {
     headlines: ["Happy Easter", "Good Friday", "Easter Joy"],
@@ -182,11 +189,11 @@ export const CATEGORIES: TemplateCategory[] = [
     offers: ["Flat 20% Off", "Peace Sale", "Blessed Deal"],
     ctas: ["Shop Now"],
   }),
-  F("rakshaBandhan", "Raksha Bandhan", "2027-08-18", "rangoli", ["rangoli", "sparkles", "flowers"], ["rakhiBond", "springBloom"], {
-    headlines: ["Happy Rakhi", "Raksha Bandhan", "Bond of Love"],
-    subheadlines: ["For your protective sibling", "Gift the bond", "Sweet savings"],
-    offers: ["Rakhi Combo", "Up to 40% Off", "Sweets & Gifts"],
-    ctas: ["Shop Gifts", "Book Rakhi"],
+  F("rakshaBandhan", "Raksha Bandhan", "2027-08-18", "rakhi", ["rakhi", "flowers", "sparkles", "rangoli"], ["rakhiBond", "rakhiRose", "springBloom"], {
+    headlines: ["Happy Rakhi", "Raksha Bandhan", "Bond of Love", "Rakhi Special", "Bhai-Bhan Gifting", "Tie The Thread", "Rakhi Utsav", "For My Bhaiya", "Sweet Bond", "Rakhi Grand Gifting"],
+    subheadlines: ["For your protective sibling", "Gift the bond", "Sweet savings", "Threading love since forever", "Gifts they will adore", "Celebrate the bhai-bhan bond", "Rakhi, mithai & lots of love"],
+    offers: ["Rakhi Combo", "Up to 40% Off", "Sweets & Gifts", "Thali Combo", "Gift Hamper Sale", "Flat ₹500 Off On Combos", "Free Delivery For Rakhi"],
+    ctas: ["Shop Gifts", "Book Rakhi", "Send With Love", "Order Today"],
   }),
   F("janmashtami", "Janmashtami", "2027-09-03", "sparkles", ["sparkles", "bunting", "flowers"], ["ganeshSaffron", "navratriVibrant"], {
     headlines: ["Happy Janmashtami", "Krishna's Blessings", "Motichoor Utsav"],
@@ -307,6 +314,109 @@ export const CATEGORIES: TemplateCategory[] = [
 export const CATEGORY_BY_KEY: Record<string, TemplateCategory> = Object.fromEntries(
   CATEGORIES.map((c) => [c.key, c]),
 );
+
+// ---------------------------------------------------------------------------
+// Festival identity: per-category layout rotations + browse-page theming, so
+// each theme page and each 30-design set feels specific to its festival.
+// ---------------------------------------------------------------------------
+
+const GENERIC_ROTATION = [
+  "classicTop", "centerMedallion", "splitBanner", "editorialLeft", "posterBold",
+  "storyStack", "ribbonFrame", "gridClean", "archEmblem", "festiveCollage",
+];
+
+/** Applies festival identity to a category (rotations, hero emblem, decorations). */
+function withIdentity(key: string, extra: Partial<TemplateCategory>) {
+  const category = CATEGORY_BY_KEY[key];
+  if (category) Object.assign(category, extra);
+}
+
+withIdentity("diwali", {
+  layoutRotation: ["archTop", "classicTop", "scriptHero", "centerMedallion", "dateBadge", "splitBanner", "stackedHero", "gridClean", "archEmblem", "cornerFrame"],
+  heroMotif: "diya",
+  decoKinds: ["scatter", "frame", "band"],
+});
+withIdentity("christmas", {
+  layoutRotation: ["centerMedallion", "archTop", "giftStack", "scriptHero", "classicTop", "spotlight", "bannerStrip", "posterFrame", "editorialLeft", "cornerFrame"],
+  heroMotif: "tree",
+  decoKinds: ["scatter", "band", "frame"],
+});
+withIdentity("newYear", {
+  layoutRotation: ["spotlight", "scriptHero", "posterFrame", "dateBadge", "centerMedallion", "classicTop", "splitRight", "gridClean", "archTop", "festiveCollage"],
+  heroMotif: "fireworks",
+  decoKinds: ["scatter", "frame", "band"],
+});
+withIdentity("holi", {
+  layoutRotation: ["festiveCollage", "scriptHero", "splitBanner", "posterBold", "cornerFrame", "centerMedallion", "bannerStrip", "editorialLeft", "dateBadge", "classicTop"],
+  heroMotif: "colorSplash",
+  decoKinds: ["scatter", "band", "frame"],
+});
+withIdentity("rakshaBandhan", {
+  layoutRotation: ["archTop", "giftStack", "classicTop", "centerMedallion", "splitRight", "scriptHero", "cornerFrame", "ribbonFrame", "dateBadge", "spotlight"],
+  heroMotif: "rakhi",
+  decoKinds: ["scatter", "frame"],
+});
+withIdentity("dhanteras", { heroMotif: "diya" });
+withIdentity("bhaiDooj", { heroMotif: "rakhi" });
+withIdentity("winter", { heroMotif: "snowflake" });
+withIdentity("festiveSale", { heroMotif: "gift" });
+
+export interface CategoryTheme {
+  emoji: string;
+  /** Line shown under the category name on its browse page. */
+  tagline: string;
+  /** Small eyebrow label above the category name on its browse page. */
+  eyebrow: string;
+}
+
+const THEME_BY_KEY: Record<string, CategoryTheme> = {
+  diwali: { emoji: "🪔", tagline: "Lamps, marigold & the brightest deals of the year", eyebrow: "Festival of Lights" },
+  dhanteras: { emoji: "🪙", tagline: "Auspicious beginnings and golden offers", eyebrow: "Shubh Labh" },
+  bhaiDooj: { emoji: "🧵", tagline: "Celebrate the sibling bond with sweet savings", eyebrow: "Bhai-Bhan" },
+  christmas: { emoji: "🎄", tagline: "Pine, tinsel and gifts under every tree", eyebrow: "Ho Ho Ho" },
+  newYear: { emoji: "🎆", tagline: "New year, new upgrades — ring it in with savings", eyebrow: "Cheers to 2027" },
+  holi: { emoji: "🎨", tagline: "A splash of colour, a flood of offers", eyebrow: "Rang Barse" },
+  rakshaBandhan: { emoji: "", tagline: "Threads of love, gifts to remember", eyebrow: "Bhai-Bhan" },
+  winter: { emoji: "❄️", tagline: "Cosy essentials for the chill season", eyebrow: "Winter" },
+  lohri: { emoji: "🔥", tagline: "Bonfire nights and harvest cheer", eyebrow: "Harvest" },
+  makarSankranti: { emoji: "🪁", tagline: "Soar into savings this Uttarayan", eyebrow: "Uttarayan" },
+  pongal: { emoji: "🌾", tagline: "Harvest blessings and kitchen specials", eyebrow: "Thai Poam" },
+  republicDay: { emoji: "🇮🇳", tagline: "Proud moments, tricolour deals", eyebrow: "26 January" },
+  independenceDay: { emoji: "🇮🇳", tagline: "Freedom to save big", eyebrow: "15 August" },
+  eid: { emoji: "🌙", tagline: "Grace, gifting and Eidi specials", eyebrow: "Eid Mubarak" },
+  ganeshChaturthi: { emoji: "🙏", tagline: "Welcome Bappa with festive deals", eyebrow: "Ganpati Bappa Morya" },
+  navratri: { emoji: "💃", tagline: "Nine nights of garba, nine sets of deals", eyebrow: "Dandiya Nights" },
+  durgaPuja: { emoji: "🛕", tagline: "The grandest shopping festival of autumn", eyebrow: "Shubho Puja" },
+  dussehra: { emoji: "🏹", tagline: "Victory of good — and great prices", eyebrow: "Vijayadashami" },
+  onam: { emoji: "🌼", tagline: "Sadhya colours and Moolam deals", eyebrow: "Kerala's Pride" },
+  karwaChauth: { emoji: "🌘", tagline: "Moonlit love and festive picks", eyebrow: "Devotion" },
+  valentines: { emoji: "❤️", tagline: "Gifts from the heart", eyebrow: "Spread Love" },
+  wedding: { emoji: "💍", tagline: "Everything for the big fat celebration", eyebrow: "Shaadi Season" },
+  festiveSale: { emoji: "🛍️", tagline: "The ultimate season of savings", eyebrow: "Mega Sale" },
+};
+
+const DEFAULT_THEME: CategoryTheme = {
+  emoji: "✨",
+  tagline: "Brand-ready designs for this occasion",
+  eyebrow: "New collection",
+};
+
+/** Festival-specific look + copy for a category's browse page and tiles. */
+export function themeFor(key: string): CategoryTheme {
+  return THEME_BY_KEY[key] ?? DEFAULT_THEME;
+}
+
+/** The palette a category's UI chrome (banners, tiles) should wear. */
+export function categoryPalette(key: string): Palette {
+  const category = CATEGORY_BY_KEY[key];
+  return getPalette(category?.paletteIds[0] ?? "diwaliGold");
+}
+
+export { GENERIC_ROTATION };
+
+export function layoutsFor(category: TemplateCategory): string[] {
+  return category.layoutRotation?.length ? category.layoutRotation : GENERIC_ROTATION;
+}
 
 export function getCategory(key: string): TemplateCategory | undefined {
   return CATEGORY_BY_KEY[key];

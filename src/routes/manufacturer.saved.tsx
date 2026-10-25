@@ -180,7 +180,7 @@ function Page() {
                 <div className="relative h-28 w-28 shrink-0 overflow-hidden rounded-xl bg-muted">
                   <TemplateSvg
                     spec={t.spec}
-                    content={composeContent({ manufacturer, retailer: { businessName: "Your Store" } })}
+                    content={composeContent({ manufacturer, retailer: { businessName: "Your Store" } }, { spec: t.spec })}
                     className="h-full w-full"
                     ariaLabel={t.title}
                   />

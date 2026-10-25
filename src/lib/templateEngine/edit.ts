@@ -16,6 +16,7 @@ import {
   type PlaceholderSlot,
   type TemplateSpec,
   type TextRole,
+  type ValueOverrides,
 } from "./types";
 
 /** Normalized area every draggable slot centre is clamped inside. */
@@ -66,6 +67,26 @@ export function setBlockText(spec: TemplateSpec, role: TextRole, text: string): 
     ...spec,
     blocks: spec.blocks.map((b) => (b.role === role ? { ...b, defaultText: text } : b)),
   };
+}
+
+/**
+ * Types a branded placeholder (name / logo / phone / email / address) straight
+ * into the template. The value is stored on the spec itself, so it persists
+ * with save / send / publish and wins over profile auto-fill at render time.
+ * Passing empty text (or no logoUrl) clears the override and falls back.
+ */
+export function setSlotValue(
+  spec: TemplateSpec,
+  field: PlaceholderField,
+  next: { text?: string; logoUrl?: string },
+): TemplateSpec {
+  const overrides: ValueOverrides = { ...spec.valueOverrides };
+  const entry: { text?: string; logoUrl?: string } = {};
+  if (next.text && next.text.trim()) entry.text = next.text;
+  if (next.logoUrl) entry.logoUrl = next.logoUrl;
+  if (Object.keys(entry).length) overrides[field] = entry;
+  else delete overrides[field];
+  return { ...spec, valueOverrides: overrides };
 }
 
 /** Re-runs the layout composition with a new palette and/or canvas size, keeping

@@ -144,7 +144,21 @@ export type MotifId =
   | "sun"
   | "flowers"
   | "sparkles"
-  | "bunting";
+  | "bunting"
+  // Festival-specific emblematic glyphs
+  | "lotus"
+  | "garland"
+  | "fireworks"
+  | "tree"
+  | "santaHat"
+  | "bell"
+  | "gift"
+  | "wreath"
+  | "rakhi"
+  | "moon";
+
+/** How the decorative motif layer is arranged behind the copy. */
+export type DecoKind = "scatter" | "frame" | "band";
 
 export interface Palette {
   id: string;
@@ -188,6 +202,16 @@ export interface TemplateSpec {
   background: Background;
   blocks: TextBlock[];
   slots: PlaceholderSlot[];
+  /** Large festival emblem drawn behind/below the copy (bottom-centre). */
+  heroMotif?: MotifId;
+  /** Decoration arrangement for the motif layer (defaults to "scatter"). */
+  decoKind?: DecoKind;
+  /**
+   * Manufacturer-authored placeholder values (name / logo / phone / email …)
+   * that win over profile auto-fill, so a template can be typed directly in the
+   * editor and ships with the saved spec (persisted inside the spec JSONB).
+   */
+  valueOverrides?: Partial<Record<PlaceholderField, { text?: string; logoUrl?: string }>>;
 }
 
 /** Values resolved for a single placeholder at render time. */
@@ -198,6 +222,9 @@ export interface ResolvedValue {
   /** False when the value is empty and the block is collapsible (hide it). */
   visible: boolean;
 }
+
+/** Manual edits (from the editor / retailer nudge) win over auto-filled profile data. */
+export type ValueOverrides = Partial<Record<PlaceholderField, { text?: string; logoUrl?: string }>>;
 
 /** Copy + resolved placeholder content used to render a filled template. */
 export interface RenderContent {

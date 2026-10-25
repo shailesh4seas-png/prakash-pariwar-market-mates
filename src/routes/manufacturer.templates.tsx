@@ -8,13 +8,14 @@ import { CategoryGrid } from "@/components/CategoryGrid";
 import { TemplateSvg } from "@/components/TemplateSvg";
 import {
   TEMPLATES_PER_CATEGORY,
+  categoryPalette,
   generateCategoryTemplates,
   getCategory,
+  themeFor,
   type CanvasKind,
 } from "@/lib/templateEngine";
 import { useManufacturerTemplates } from "@/lib/templateQueries";
 import { Button } from "@/components/ui/button";
-import { FestivalCollectionHeader } from "@/components/FestivalCollectionHeader";
 
 export const Route = createFileRoute("/manufacturer/templates")({
   head: () => ({
@@ -50,7 +51,7 @@ function Page() {
       <>
         <PageHeader
           title="Templates"
-          desc="Choose a festival or season — every category has 30 distinct, brand-ready designs."
+          desc="Choose a festival or season — every category has 30 distinct, theme-specific designs."
           action={
             <Link
               to="/manufacturer/saved"
@@ -71,21 +72,58 @@ function Page() {
     );
   }
 
+  // The category page wears the festival's own colours, emblem and tagline, so
+  // Diwali / Christmas / New Year pages never look interchangeable.
+  const theme = themeFor(picked);
+  const pal = categoryPalette(picked);
+
   return (
     <>
-      <PageHeader
-        title={category?.label ?? "Templates"}
-        desc={`30 ${canvasKind} designs — pick one to open the editor.`}
-        action={
-          <Button variant="outline"
+      <div
+        className="relative mb-6 overflow-hidden rounded-3xl px-6 py-8 shadow-card"
+        style={{
+          background: `linear-gradient(120deg, ${pal.bgFrom}, ${pal.bgTo})`,
+          color: pal.text,
+        }}
+      >
+        <span
+          aria-hidden
+          className="absolute -right-4 -top-6 text-8xl opacity-25 select-none"
+        >
+          {theme.emoji}
+        </span>
+        <span
+          aria-hidden
+          className="absolute bottom-3 right-10 text-5xl opacity-40 select-none"
+        >
+          {theme.emoji}
+        </span>
+        <div className="relative flex flex-wrap items-center justify-between gap-4">
+          <div className="min-w-0">
+            <p
+              className="text-[11px] font-bold tracking-[0.22em] uppercase"
+              style={{ color: pal.accent }}
+            >
+              {theme.eyebrow}
+            </p>
+            <h1 className="mt-1 flex items-center gap-2 text-2xl font-extrabold sm:text-3xl">
+              <span aria-hidden>{theme.emoji}</span>
+              {category?.label ?? "Templates"}
+            </h1>
+            <p className="mt-1 max-w-xl text-sm opacity-90">
+              {theme.tagline} — {TEMPLATES_PER_CATEGORY} {canvasKind} designs, pick one to open the
+              editor.
+            </p>
+          </div>
+          <button
             onClick={() => setPicked(null)}
-            className="flex w-fit items-center gap-2 rounded-xl border bg-card px-4 py-2.5 text-sm font-semibold hover:bg-muted"
+            className="flex w-fit items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold backdrop-blur-sm transition hover:bg-black/10"
+            style={{ borderColor: `${pal.accent}66` }}
           >
             <ArrowLeft className="h-4 w-4" /> All categories
-          </Button>
-        }
-      />
-      <FestivalCollectionHeader categoryKey={picked}/>
+          </button>
+        </div>
+      </div>
       <div className="mb-4 flex gap-1 rounded-xl bg-card p-1 shadow-card w-fit">
         {(["post", "story"] as CanvasKind[]).map((k) => (
           <Button variant="ghost"

@@ -42,12 +42,17 @@ export function artworkTextColor(category: string, variant: number, p: Palette):
   return LIGHT_SCENES[category]?.includes(variant % count) ? p.onAccent : p.text;
 }
 
-/** Keep native decorative artwork unobscured; all branding lives in two safe strips. */
-export function themedComposition(category: string, variant: number, p: Palette, base: LayoutComposition): LayoutComposition {
-  const personalSlots: PlaceholderSlot[] = [
+/** The two personal-name strips every design carries, artwork or vector. */
+export function personalNameSlots(): PlaceholderSlot[] {
+  return [
     {id:'mfr_name',field:'mfr_name',cx:0.5,cy:0.16,w:0.55,h:0.025,style:'divider',collapsible:true},
     {id:'rtl_name',field:'rtl_name',cx:0.5,cy:0.96,w:0.6,h:0.025,style:'divider',collapsible:true},
   ];
+}
+
+/** Keep native decorative artwork unobscured; all branding lives in two safe strips. */
+export function themedComposition(category: string, variant: number, p: Palette, base: LayoutComposition): LayoutComposition {
+  const personalSlots: PlaceholderSlot[] = personalNameSlots();
   if (!artworkFor(category, variant)) return {...base, slots:[...base.slots,...personalSlots]};
   const color = artworkTextColor(category, variant, p);
   const style = Math.floor(variant / (ARTWORK[category]?.length ?? 6)) % 5;

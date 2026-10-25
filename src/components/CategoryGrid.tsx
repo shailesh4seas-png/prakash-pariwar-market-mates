@@ -1,9 +1,11 @@
 import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import {
+  categoryPalette,
   generateTemplate,
   isUpcoming,
   filterCategories,
+  themeFor,
   type CatalogFilter,
 } from "@/lib/templateEngine";
 import { TemplateSvg } from "@/components/TemplateSvg";
@@ -78,35 +80,58 @@ export function CategoryGrid({ onSelect, selectedKey }: CategoryGridProps) {
         </p>
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-          {previews.map(({ category, thumb }) => (
-            <Button variant="ghost"
-              key={category.key}
-              onClick={() => onSelect(category.key)}
-              className={cn(
-                "group block h-auto p-0 whitespace-normal overflow-hidden rounded-lg bg-card text-left shadow-card ring-1 ring-transparent transition hover:ring-primary/40",
-                selectedKey === category.key && "ring-2 ring-primary",
-              )}
-            >
-              <div className="relative aspect-square w-full overflow-hidden">
-                <TemplateSvg
-                  spec={thumb}
-                  ariaLabel={`${category.label} templates`}
-                  className="h-full w-full transition group-hover:scale-[1.02]"
-                />
-                {isUpcoming(category) && (
-                  <span className="absolute right-2 top-2 rounded-full bg-gold px-2 py-0.5 text-[10px] font-bold text-gold-foreground shadow">
-                    Upcoming
-                  </span>
+          {previews.map(({ category, thumb }) => {
+            const theme = themeFor(category.key);
+            const pal = categoryPalette(category.key);
+            return (
+              <Button
+                variant="ghost"
+                key={category.key}
+                onClick={() => onSelect(category.key)}
+                className={cn(
+                  "group block h-auto p-0 whitespace-normal overflow-hidden rounded-lg bg-card text-left shadow-card ring-1 ring-transparent transition hover:bg-card hover:ring-primary/40",
+                  selectedKey === category.key && "ring-2 ring-primary",
                 )}
-              </div>
-              <div className="p-3">
-                <p className="truncate text-sm font-semibold">{category.label}</p>
-                <p className="text-xs capitalize text-muted-foreground">{category.kind}</p>
-              </div>
-            </Button>
-          ))}
+              >
+                <div className="relative aspect-square w-full overflow-hidden">
+                  <TemplateSvg
+                    spec={thumb}
+                    ariaLabel={`${category.label} templates`}
+                    className="h-full w-full transition group-hover:scale-[1.02]"
+                  />
+                  {/* Festival identity chip — colours + emblem differ per theme. */}
+                  <span
+                    className="absolute left-2 top-2 flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold shadow"
+                    style={{ background: pal.accent, color: pal.onAccent }}
+                  >
+                    <span aria-hidden>{theme.emoji}</span>
+                    <span className="uppercase tracking-wide">{theme.eyebrow}</span>
+                  </span>
+                  {isUpcoming(category) && (
+                    <span
+                      className="absolute right-2 top-2 rounded-full px-2 py-0.5 text-[10px] font-bold shadow"
+                      style={{ background: pal.bgFrom, color: pal.text }}
+                    >
+                      Upcoming
+                    </span>
+                  )}
+                </div>
+                <div
+                  className="border-t-2 p-3"
+                  style={{
+                    borderColor: pal.accent,
+                    background: `linear-gradient(135deg, ${pal.bgFrom}14, ${pal.bgTo}26)`,
+                  }}
+                >
+                  <p className="truncate text-sm font-semibold">{category.label}</p>
+                  <p className="truncate text-xs text-muted-foreground">{theme.tagline}</p>
+                </div>
+              </Button>
+            );
+          })}
         </div>
       )}
     </div>
   );
 }
+
