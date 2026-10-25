@@ -10,6 +10,7 @@ import {
 } from "@/lib/templateEngine";
 import { TemplateSvg } from "@/components/TemplateSvg";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 const FILTERS: { id: CatalogFilter; label: string }[] = [
   { id: "all", label: "All" },
@@ -56,7 +57,7 @@ export function CategoryGrid({ onSelect, selectedKey }: CategoryGridProps) {
         </div>
         <div className="flex gap-1 rounded-xl bg-card p-1 shadow-card">
           {FILTERS.map((f) => (
-            <button
+            <Button variant="ghost"
               key={f.id}
               onClick={() => setKind(f.id)}
               aria-pressed={kind === f.id}
@@ -68,7 +69,7 @@ export function CategoryGrid({ onSelect, selectedKey }: CategoryGridProps) {
               )}
             >
               {f.label}
-            </button>
+            </Button>
           ))}
         </div>
       </div>
@@ -83,11 +84,12 @@ export function CategoryGrid({ onSelect, selectedKey }: CategoryGridProps) {
             const theme = themeFor(category.key);
             const pal = categoryPalette(category.key);
             return (
-              <button
+              <Button
+                variant="ghost"
                 key={category.key}
                 onClick={() => onSelect(category.key)}
                 className={cn(
-                  "group overflow-hidden rounded-2xl bg-card text-left shadow-card ring-1 ring-transparent transition hover:ring-primary/40",
+                  "group block h-auto p-0 whitespace-normal overflow-hidden rounded-lg bg-card text-left shadow-card ring-1 ring-transparent transition hover:bg-card hover:ring-primary/40",
                   selectedKey === category.key && "ring-2 ring-primary",
                 )}
               >
@@ -124,7 +126,7 @@ export function CategoryGrid({ onSelect, selectedKey }: CategoryGridProps) {
                   <p className="truncate text-sm font-semibold">{category.label}</p>
                   <p className="truncate text-xs text-muted-foreground">{theme.tagline}</p>
                 </div>
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -132,3 +134,4 @@ export function CategoryGrid({ onSelect, selectedKey }: CategoryGridProps) {
     </div>
   );
 }
+

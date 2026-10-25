@@ -150,3 +150,18 @@
 @utility shadow-card { box-shadow: var(--shadow-card); }
 @utility shadow-glow { box-shadow: var(--shadow-glow); }
 @utility no-scrollbar { scrollbar-width: none; &::-webkit-scrollbar { display: none; } }
+
+:root {
+  --festival-diwali: oklch(0.94 0.06 75);
+  --festival-christmas: oklch(0.94 0.035 155);
+  --festival-new-year: oklch(0.93 0.025 235);
+  --festival-holi: oklch(0.94 0.045 350);
+  --festival-rakhi: oklch(0.96 0.035 35);
+}
+.festival-collection { background: var(--muted); padding-inline: 1.25rem; }
+.festival-diwali, .festival-dhanteras { background: var(--festival-diwali); }
+.festival-christmas { background: var(--festival-christmas); }
+.festival-newYear { background: var(--festival-new-year); }
+.festival-holi { background: var(--festival-holi); }
+.festival-rakshaBandhan, .festival-bhaiDooj { background: var(--festival-rakhi); }
+.dark .festival-collection { background: var(--muted); }

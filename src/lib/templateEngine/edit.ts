@@ -8,6 +8,7 @@
 import { getPalette } from "./palettes";
 import { LAYOUTS, LAYOUT_COUNT, type Copy } from "./layouts";
 import { getCategory } from "./catalog";
+import { themedComposition } from "./artwork";
 import {
   CANVAS,
   type CanvasKind,
@@ -98,7 +99,10 @@ export function recomposeSpec(
   const canvasKind = opts.canvasKind ?? spec.canvas.kind;
   const palette = getPalette(paletteId);
   const layoutIndex = findLayoutIndex(spec.layoutId, palette);
-  const composition = LAYOUTS[layoutIndex]!(palette, copyFromSpec(spec));
+  const build = LAYOUTS[layoutIndex];
+  if (!build) return spec;
+  const base = build(palette, copyFromSpec(spec));
+  const composition = spec.artworkVersion === 1 ? themedComposition(spec.categoryKey, spec.variant, palette, base) : base;
 
   const moved = new Map<PlaceholderField, PlaceholderSlot>(spec.slots.map((s) => [s.field, s]));
   const slots = composition.slots.map((s) => {
@@ -124,7 +128,7 @@ export function cycleBackgroundVariant(spec: TemplateSpec): TemplateSpec {
   return {
     ...spec,
     variant,
-    background: { ...spec.background, angle, scrim: scrimTable[variant % scrimTable.length]! },
+    background: { ...spec.background, angle, scrim: scrimTable[variant % scrimTable.length] ?? 0.12 },
   };
 }
 
@@ -170,7 +174,10 @@ export function resizeSlot(
 export function resetLayout(spec: TemplateSpec): TemplateSpec {
   const palette = getPalette(spec.palette.id);
   const layoutIndex = findLayoutIndex(spec.layoutId, palette);
-  const composition = LAYOUTS[layoutIndex]!(palette, copyFromSpec(spec));
+  const build = LAYOUTS[layoutIndex];
+  if (!build) return spec;
+  const base = build(palette, copyFromSpec(spec));
+  const composition = spec.artworkVersion === 1 ? themedComposition(spec.categoryKey, spec.variant, palette, base) : base;
   return { ...spec, slots: composition.slots };
 }
 

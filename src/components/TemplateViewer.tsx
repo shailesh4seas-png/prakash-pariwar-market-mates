@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { TemplateSvg, composeContent } from "@/components/TemplateSvg";
 import { PlaceholderEditor } from "@/components/PlaceholderEditor";
+import { BrandDetailsEditor } from "@/components/BrandDetailsEditor";
 import {
   getCategory,
   RETAILER_FIELDS,
@@ -71,7 +72,10 @@ export function TemplateViewer({ template, open, onOpenChange }: TemplateViewerP
   const content = useMemo(
     () =>
       spec && template
-        ? composeContent({ manufacturer: template.manufacturer, retailer }, { spec })
+        ? composeContent(
+            { manufacturer: template.manufacturer, retailer },
+            { spec, overrides: spec.brandOverrides ?? {} },
+          )
         : undefined,
     [spec, template, retailer],
   );
@@ -135,18 +139,18 @@ export function TemplateViewer({ template, open, onOpenChange }: TemplateViewerP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="truncate">
             {category?.label ?? template.categoryKey}
           </DialogTitle>
           <DialogDescription>
             From {template.manufacturer.businessName}
-            {isStory ? " · Story (9:16)" : " · Post (1:1)"}. Drag your own details to reposition,
-            then download the PNG.
+            {isStory ? " · Story (9:16)" : " · Post (1:1)"}.
           </DialogDescription>
         </DialogHeader>
 
+        <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_280px]">
         <div className="mx-auto w-full max-w-sm">
           <div className={`relative ${aspect} w-full overflow-hidden rounded-2xl shadow-glow`}>
             <TemplateSvg
@@ -163,17 +167,16 @@ export function TemplateViewer({ template, open, onOpenChange }: TemplateViewerP
             />
           </div>
           <div className="mt-2 flex items-center justify-between">
-            <p className="text-xs text-muted-foreground">
-              Only your gold boxes move. Manufacturer blocks are locked.
-            </p>
-            <button
+            <Button variant="ghost" size="sm"
               type="button"
               onClick={() => setSpec(resetLayout(spec))}
               className="text-xs font-medium text-primary hover:underline"
             >
               Reset position
-            </button>
+            </Button>
           </div>
+        </div>
+        <BrandDetailsEditor owner="retailer" spec={spec} content={content ?? {}} onChange={setSpec}/>
         </div>
 
         <div className="flex flex-wrap items-center justify-end gap-2 pt-1">

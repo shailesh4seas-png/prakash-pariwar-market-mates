@@ -53,6 +53,8 @@ export type TextTreatment = "none" | "badge" | "ribbon" | "footerBand" | "outlin
 
 /** Placeholder fields that get auto-filled from the manufacturer / retailer profiles. */
 export type PlaceholderField =
+  | "mfr_name"
+  | "rtl_name"
   | "mfr_business_name"
   | "mfr_logo"
   | "mfr_phone"
@@ -64,12 +66,14 @@ export type PlaceholderField =
   | "rtl_address";
 
 export const MANUFACTURER_FIELDS: PlaceholderField[] = [
+  "mfr_name",
   "mfr_business_name",
   "mfr_logo",
   "mfr_phone",
   "mfr_email",
 ];
 export const RETAILER_FIELDS: PlaceholderField[] = [
+  "rtl_name",
   "rtl_business_name",
   "rtl_logo",
   "rtl_phone",
@@ -185,6 +189,8 @@ export interface LayoutComposition {
  * variant / canvas size" without losing the design identity.
  */
 export interface TemplateSpec {
+  artworkVersion?: 1;
+  brandOverrides?: Partial<Record<PlaceholderField, { text?: string; logoUrl?: string }>>;
   id: string;
   categoryKey: string;
   canvas: Canvas;
