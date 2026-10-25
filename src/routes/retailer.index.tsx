@@ -1,39 +1,29 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowLeft,
   ArrowRight,
-  BarChart3,
-  Box,
-  Download,
-  Flame,
-  Instagram,
-  LayoutGrid,
-  Search,
-  Sparkles,
-  Star,
-  Sun,
-  Tag,
-  Target,
-  Flower2,
   Bookmark,
-  type LucideIcon,
+  Download,
+  Inbox,
+  LayoutTemplate,
+  Search,
+  Store,
 } from "lucide-react";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import heroDiwali from "@/assets/hero-diwali.jpg";
 import holi from "@/assets/tpl-holi.jpg";
 import navratri from "@/assets/tpl-navratri.jpg";
-import { TemplateCard } from "@/components/TemplateCard";
-import { TemplateModal } from "@/components/TemplateModal";
+import { TemplateSvg, composeContent } from "@/components/TemplateSvg";
+import { TemplateViewer } from "@/components/TemplateViewer";
+import { Skeleton } from "@/components/ui/skeleton";
+import { getCategory } from "@/lib/templateEngine";
+import { useSession } from "@/lib/session";
+import type { ReceivedTemplate } from "@/lib/designerTemplates";
 import {
-  CATEGORIES,
-  NEW_TEMPLATES,
-  RECOMMENDED,
-  TEMPLATES,
-  TRENDING,
-  byIds,
-  type Template,
-} from "@/lib/data";
-import { library, useLibrary } from "@/lib/library";
+  brandFromProfile,
+  useReceivedTemplates,
+  useRecentDownloads,
+} from "@/lib/templateQueries";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/retailer/")({
@@ -80,17 +70,6 @@ const SLIDES = [
   },
 ];
 
-const CAT_ICON: Record<string, LucideIcon> = {
-  All: LayoutGrid,
-  Festival: Flower2,
-  Products: Box,
-  Offers: Tag,
-  "New Arrivals": Star,
-  Seasonal: Sun,
-  "Social Media": Instagram,
-  Business: BarChart3,
-};
-
 function Hero() {
   const [i, setI] = useState(0);
   useEffect(() => {
@@ -122,14 +101,12 @@ function Hero() {
           </span>
         </h1>
         <p className="mt-3 text-lg text-sidebar-foreground">{s.sub}</p>
-        <button
-          onClick={() =>
-            document.getElementById("trending")?.scrollIntoView({ behavior: "smooth" })
-          }
+        <Link
+          to="/retailer/templates"
           className="mt-6 flex w-fit items-center gap-2 rounded-xl bg-card px-5 py-3 text-sm font-semibold text-foreground shadow-card transition hover:gap-3"
         >
-          Create Your Festive Post <ArrowRight className="h-4 w-4" />
-        </button>
+          Browse your templates <ArrowRight className="h-4 w-4" />
+        </Link>
       </div>
       {[-1, 1].map((d) => (
         <button
@@ -166,16 +143,16 @@ function Section({
   title,
   desc,
   children,
-  id,
+  action,
 }: {
-  icon: LucideIcon;
+  icon: typeof Inbox;
   title: string;
   desc?: string;
   children: ReactNode;
-  id?: string;
+  action?: ReactNode;
 }) {
   return (
-    <section id={id} className="scroll-mt-24">
+    <section className="scroll-mt-24">
       <div className="mb-4 flex items-end justify-between gap-3">
         <div className="flex min-w-0 items-start gap-3">
           <Icon className="mt-1 h-6 w-6 shrink-0 text-primary" />
@@ -184,30 +161,65 @@ function Section({
             {desc && <p className="text-sm text-muted-foreground">{desc}</p>}
           </div>
         </div>
-        <button className="flex shrink-0 items-center gap-1 text-sm font-semibold text-primary">
-          View All <ArrowRight className="h-4 w-4" />
-        </button>
+        {action}
       </div>
       {children}
     </section>
   );
 }
 
-function Row({ items, onOpen }: { items: Template[]; onOpen: (t: Template) => void }) {
+function ThumbCard({
+  template,
+  content,
+  onOpen,
+}: {
+  template: ReceivedTemplate;
+  content: ReturnType<typeof composeContent>;
+  onOpen: () => void;
+}) {
+  const category = getCategory(template.categoryKey);
+  const isStory = template.canvasKind === "story";
+  return (
+    <button
+      onClick={onOpen}
+      className="w-40 shrink-0 snap-start overflow-hidden rounded-2xl bg-card text-left shadow-card ring-1 ring-transparent transition hover:ring-primary/40 sm:w-48"
+    >
+      <div className={cn("relative w-full overflow-hidden", isStory ? "aspect-[9/16]" : "aspect-square")}>
+        <TemplateSvg
+          spec={template.spec}
+          content={content}
+          ariaLabel={`${category?.label ?? template.categoryKey} from ${template.manufacturer.businessName}`}
+          className="h-full w-full"
+        />
+        {!template.seenAt && (
+          <span className="absolute left-2 top-2 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-primary-foreground shadow">
+            New
+          </span>
+        )}
+      </div>
+      <div className="p-2.5">
+        <p className="truncate text-sm font-semibold">{category?.label ?? template.categoryKey}</p>
+        <p className="truncate text-xs text-muted-foreground">{template.manufacturer.businessName}</p>
+      </div>
+    </button>
+  );
+}
+
+function Row({
+  items,
+  contents,
+  onOpen,
+}: {
+  items: ReceivedTemplate[];
+  contents: Map<string, ReturnType<typeof composeContent>>;
+  onOpen: (t: ReceivedTemplate) => void;
+}) {
   const ref = useRef<HTMLDivElement>(null);
-  const lib = useLibrary();
   return (
     <div className="relative">
       <div ref={ref} className="no-scrollbar -mx-1 flex snap-x gap-4 overflow-x-auto px-1 pb-3">
         {items.map((t) => (
-          <TemplateCard
-            key={t.id}
-            t={t}
-            onOpen={onOpen}
-            saved={lib.saved.includes(t.id)}
-            onToggleSave={(x) => library.toggleSave(x.id)}
-            className="snap-start"
-          />
+          <ThumbCard key={t.templateId} template={t} content={contents.get(t.templateId) ?? {}} onOpen={() => onOpen(t)} />
         ))}
       </div>
       <button
@@ -222,18 +234,46 @@ function Row({ items, onOpen }: { items: Template[]; onOpen: (t: Template) => vo
 }
 
 function RetailerHome() {
-  const [open, setOpen] = useState<Template | null>(null);
-  const [cat, setCat] = useState<string>("All");
-  const [q, setQ] = useState("");
-  const lib = useLibrary();
+  const received = useReceivedTemplates();
+  const downloads = useRecentDownloads();
+  const { activeProfile } = useSession();
+  const retailer = useMemo(() => brandFromProfile(activeProfile), [activeProfile]);
 
-  const filtered = TEMPLATES.filter(
-    (t) =>
-      t.status === "published" &&
-      (cat === "All" || t.category === cat) &&
-      (t.title + t.headline).toLowerCase().includes(q.toLowerCase()),
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState<ReceivedTemplate | null>(null);
+
+  const data = received.data ?? [];
+
+  const contents = useMemo(() => {
+    const map = new Map<string, ReturnType<typeof composeContent>>();
+    for (const t of data) map.set(t.templateId, composeContent({ manufacturer: t.manufacturer, retailer }));
+    return map;
+  }, [data, retailer]);
+
+  // Published-first, then most-recently sent.
+  const ordered = useMemo(
+    () =>
+      [...data].sort((a, b) => {
+        if (a.isPublished !== b.isPublished) return a.isPublished ? -1 : 1;
+        return (b.sentAt ?? "").localeCompare(a.sentAt ?? "");
+      }),
+    [data],
   );
-  const filtering = cat !== "All" || q.length > 0;
+
+  const savedList = useMemo(() => data.filter((t) => t.isSaved), [data]);
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+    return ordered.filter((t) => {
+      const category = getCategory(t.categoryKey);
+      return (
+        t.manufacturer.businessName.toLowerCase().includes(q) ||
+        (category?.label ?? "").toLowerCase().includes(q) ||
+        t.headline.toLowerCase().includes(q)
+      );
+    });
+  }, [query, ordered]);
 
   return (
     <div className="space-y-10">
@@ -243,118 +283,84 @@ function RetailerHome() {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Search Diwali, appliances, offers…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search by manufacturer, festival or headline…"
             className="w-full rounded-xl border bg-muted/50 py-3 pl-9 pr-3 text-sm outline-none focus:border-primary"
           />
         </div>
-        <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto">
-          {["Diwali", "Dhanteras", "Wedding Season", "Smart TV", "Kitchen", "Exchange Offer"].map(
-            (s) => (
-              <button
-                key={s}
-                onClick={() => setQ(s.split(" ")[0] ?? s)}
-                className="shrink-0 rounded-full bg-accent px-3 py-1.5 text-xs font-medium text-accent-foreground hover:bg-primary hover:text-primary-foreground"
-              >
-                {s}
-              </button>
-            ),
-          )}
-        </div>
       </div>
 
-      {filtering && (
-        <Section
-          icon={Search}
-          title={`Results${cat !== "All" ? ` in ${cat}` : ""}`}
-          desc={`${filtered.length} templates found`}
-        >
+      {query.trim() ? (
+        <Section icon={Search} title="Search results" desc={`${filtered.length} templates found`}>
           {filtered.length ? (
-            <Row items={filtered} onOpen={setOpen} />
+            <Row items={filtered} contents={contents} onOpen={setOpen} />
           ) : (
             <p className="rounded-2xl bg-card p-8 text-center text-sm text-muted-foreground">
-              No templates match. Try another festival or product.
+              No templates match. Try another festival or manufacturer.
             </p>
           )}
         </Section>
-      )}
-
-      <Section
-        id="trending"
-        icon={Flame}
-        title="Trending Templates"
-        desc="Most popular templates for your business"
-      >
-        <Row items={TRENDING} onOpen={setOpen} />
-      </Section>
-
-      <section>
-        <div className="mb-4 flex items-center gap-3">
-          <LayoutGrid className="h-6 w-6 text-primary" />
-          <h2 className="text-xl font-bold">Browse by Category</h2>
-        </div>
-        <div className="grid grid-cols-4 gap-3 sm:grid-cols-8">
-          {CATEGORIES.map((c) => {
-            const Icon = CAT_ICON[c] ?? LayoutGrid;
-            const active = cat === c;
-            return (
-              <button
-                key={c}
-                onClick={() => setCat(c)}
-                className={cn(
-                  "flex flex-col items-center gap-2 rounded-2xl p-3 text-xs font-medium transition sm:p-4 sm:text-sm",
-                  active
-                    ? "bg-gradient-primary text-primary-foreground shadow-glow"
-                    : "bg-card shadow-card hover:-translate-y-0.5",
-                )}
+      ) : (
+        <Section
+          icon={Inbox}
+          title="From your manufacturers"
+          desc="Published and freshly shared creatives from the manufacturers you're linked to."
+          action={
+            <Link
+              to="/retailer/templates"
+              className="flex shrink-0 items-center gap-1 text-sm font-semibold text-primary"
+            >
+              View All <ArrowRight className="h-4 w-4" />
+            </Link>
+          }
+        >
+          {received.isLoading ? (
+            <div className="flex gap-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} className="h-56 w-40 shrink-0 rounded-2xl" />
+              ))}
+            </div>
+          ) : ordered.length === 0 ? (
+            <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed bg-card/50 px-6 py-14 text-center">
+              <Store className="h-8 w-8 text-muted-foreground" />
+              <p className="max-w-sm text-sm text-muted-foreground">
+                No templates yet. Once a manufacturer you're linked to publishes or sends a template,
+                it lands here ready to personalise and download.
+              </p>
+              <Link
+                to="/retailer/templates"
+                className="mt-1 inline-flex items-center gap-2 rounded-xl bg-gradient-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow"
               >
-                <Icon className={cn("h-6 w-6 sm:h-7 sm:w-7", !active && "text-primary")} />
-                <span className="text-center leading-tight">{c}</span>
-              </button>
-            );
-          })}
-        </div>
-      </section>
-
-      <Section icon={Sparkles} title="New Templates" desc="Fresh designs to keep your brand active">
-        <Row
-          items={NEW_TEMPLATES.filter((t) => t.status === "published").concat(
-            NEW_TEMPLATES.filter((t) => t.status !== "published"),
+                <LayoutTemplate className="h-4 w-4" /> Browse the catalog
+              </Link>
+            </div>
+          ) : (
+            <Row items={ordered.slice(0, 12)} contents={contents} onOpen={setOpen} />
           )}
-          onOpen={setOpen}
-        />
-      </Section>
-
-      <Section
-        icon={Target}
-        title="Recommended for You"
-        desc="Based on your business type: Electronics & Home Appliances"
-      >
-        <Row items={RECOMMENDED} onOpen={setOpen} />
-      </Section>
+        </Section>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-2xl bg-card p-5 shadow-card">
           <h3 className="flex items-center gap-2 font-bold">
             <Bookmark className="h-5 w-5 text-primary" /> Saved Templates{" "}
-            <span className="text-sm font-normal text-muted-foreground">({lib.saved.length})</span>
+            <span className="text-sm font-normal text-muted-foreground">({savedList.length})</span>
           </h3>
           <div className="mt-4 grid grid-cols-3 gap-3">
-            {byIds(lib.saved)
-              .slice(0, 6)
-              .map((t) => (
-                <button key={t.id} onClick={() => setOpen(t)} className="text-left">
-                  <img
-                    src={t.image}
-                    alt={t.title}
-                    loading="lazy"
-                    className="aspect-square w-full rounded-xl object-cover"
+            {savedList.slice(0, 6).map((t) => (
+              <button key={t.templateId} onClick={() => setOpen(t)} className="text-left">
+                <div className="aspect-square w-full overflow-hidden rounded-xl">
+                  <TemplateSvg
+                    spec={t.spec}
+                    content={contents.get(t.templateId) ?? {}}
+                    className="h-full w-full"
+                    ariaLabel={getCategory(t.categoryKey)?.label ?? "Saved template"}
                   />
-                  <p className="mt-1 truncate text-xs font-medium">{t.title}</p>
-                </button>
-              ))}
-            {!lib.saved.length && (
+                </div>
+              </button>
+            ))}
+            {!savedList.length && (
               <p className="col-span-3 text-sm text-muted-foreground">
                 Tap the bookmark on any template to save it here.
               </p>
@@ -366,38 +372,49 @@ function RetailerHome() {
             <Download className="h-5 w-5 text-primary" /> My Downloads
           </h3>
           <ul className="mt-4 divide-y">
-            {lib.downloads.slice(0, 5).map((d) => {
-              const t = byIds([d.id])[0]!;
+            {(downloads.data ?? []).slice(0, 5).map((d) => {
+              const t = data.find((x) => x.templateId === d.templateId);
+              const category = getCategory(t?.categoryKey ?? "");
               return (
                 <li key={d.id} className="flex items-center gap-3 py-2.5">
-                  <img
-                    src={t.image}
-                    alt=""
-                    loading="lazy"
-                    className="h-11 w-11 shrink-0 rounded-lg object-cover"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold">{t.title}</p>
-                    <p className="text-xs text-muted-foreground">{d.at} · PNG · 1080×1080</p>
+                  <div className="h-11 w-11 shrink-0 overflow-hidden rounded-lg bg-muted">
+                    {t && (
+                      <TemplateSvg
+                        spec={t.spec}
+                        content={contents.get(t.templateId) ?? {}}
+                        className="h-full w-full"
+                        ariaLabel={category?.label ?? "Downloaded creative"}
+                      />
+                    )}
                   </div>
-                  <button
-                    onClick={() => setOpen(t)}
-                    className="rounded-lg border px-3 py-1.5 text-xs font-medium hover:bg-muted"
-                  >
-                    Re-export
-                  </button>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold">{category?.label ?? "Creative"}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(d.at).toLocaleDateString()} ·{" "}
+                      {d.canvasKind === "story" ? "PNG · 1080×1920" : "PNG · 1080×1080"}
+                    </p>
+                  </div>
+                  {t && (
+                    <button
+                      onClick={() => setOpen(t)}
+                      className="rounded-lg border px-3 py-1.5 text-xs font-medium hover:bg-muted"
+                    >
+                      Re-export
+                    </button>
+                  )}
                 </li>
               );
             })}
+            {!downloads.data?.length && (
+              <li className="py-4 text-sm text-muted-foreground">
+                Downloaded creatives will show up here.
+              </li>
+            )}
           </ul>
         </div>
       </div>
 
-      <TemplateModal
-        template={open}
-        onClose={() => setOpen(null)}
-        onDownload={(t) => library.addDownload(t.id)}
-      />
+      <TemplateViewer template={open} open={open !== null} onOpenChange={(o) => !o && setOpen(null)} />
     </div>
   );
 }
