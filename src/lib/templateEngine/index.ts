@@ -8,3 +8,4 @@ export * from "./generator";
 export * from "./fit";
 export * from "./render";
 export * from "./export";
+export * from "./edit";
