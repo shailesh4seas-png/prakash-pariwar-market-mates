@@ -242,7 +242,7 @@ function RetailerHome() {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState<ReceivedTemplate | null>(null);
 
-  const data = received.data ?? [];
+  const data = useMemo(() => received.data ?? [], [received.data]);
 
   const contents = useMemo(() => {
     const map = new Map<string, ReturnType<typeof composeContent>>();
