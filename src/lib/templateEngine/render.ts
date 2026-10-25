@@ -1,5 +1,6 @@
 import { escapeXml, renderMotifLayer } from "./motifs";
 import { createRng } from "./prng";
+import { artworkTextColor, specArtwork } from "./artwork";
 import { fitText } from "./fit";
 import { isLogoField, type PlaceholderSlot, type RenderContent, type TemplateSpec, type TextBlock } from "./types";
 
@@ -110,7 +111,9 @@ function renderSlot(
   W: number,
   H: number,
 ): string {
-  const value = content.values?.find((v) => v.field === slot.field);
+  const original = content.values?.find((v) => v.field === slot.field);
+  const override = spec.brandOverrides?.[slot.field];
+  const value = override ? { ...original, ...override, visible: true } : original;
   if (value && !value.visible) return "";
   const accent = slot.accentColor ?? spec.palette.accent;
   const cx = slot.cx * W;
@@ -183,7 +186,7 @@ function renderSlot(
       plate = "";
   }
   const textColor =
-    slot.style === "pill" || slot.style === "ribbon" ? spec.palette.onAccent : spec.palette.text;
+    slot.style === "pill" || slot.style === "ribbon" ? spec.palette.onAccent : specArtwork(spec) ? artworkTextColor(spec.categoryKey, spec.variant, spec.palette) : spec.palette.text;
 
   return (
     `<g>${plate}` +
@@ -220,6 +223,8 @@ export function renderTemplateToSvg(
   const defs = `<defs><linearGradient id="bg-${clipId(spec, { id: "bg", field: "mfr_logo", cx: 0, cy: 0, w: 0, h: 0, style: "pill" })}" gradientUnits="objectBoundingBox" x1="${g.x1}" y1="${g.y1}" x2="${g.x2}" y2="${g.y2}">${bgStops}</linearGradient></defs>`;
 
   const motifLayer = renderMotifLayer(spec.motifs, rng, W, H, spec.palette, spec.variant);
+  const artwork = specArtwork(spec);
+  const artworkLayer = artwork ? `<image href="${escapeXml(artwork)}" width="${W}" height="${H}" preserveAspectRatio="none"/>` : "";
   const scrimRect =
     spec.background.scrim > 0
       ? `<rect width="${W}" height="${H}" fill="#000000" opacity="${n(spec.background.scrim)}"/>`
@@ -238,8 +243,8 @@ export function renderTemplateToSvg(
     `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" ${sizeAttrs} viewBox="0 0 ${W} ${H}">` +
     defs +
     `<rect width="${W}" height="${H}" fill="url(#${bgId})"/>` +
-    `<g>${motifLayer}</g>` +
-    scrimRect +
+    artworkLayer +
+    (artwork ? `<rect y="0" width="${W}" height="${H*0.18}" fill="${spec.palette.bgFrom}" opacity="0.16"/><rect y="${H*0.80}" width="${W}" height="${H*0.20}" fill="${spec.palette.bgFrom}" opacity="0.16"/>` : `<g>${motifLayer}</g>` + scrimRect) +
     blocks +
     slots +
     `</svg>`
