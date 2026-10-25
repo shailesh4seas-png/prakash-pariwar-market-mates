@@ -162,11 +162,12 @@ export function buildDraft(args: {
 /** Maps a Supabase profile row (with its signed logo URL) to the engine brand shape. */
 export function brandFromProfile(profile: UserProfile | null): BrandProfile {
   if (!profile) return { businessName: "" };
+  const email = profile.business_email || profile.email;
   return {
     businessName: profile.business_name ?? "",
     ...(profile.businessLogoUrl ? { logoUrl: profile.businessLogoUrl } : {}),
     ...(profile.contact_number ? { phone: profile.contact_number } : {}),
-    ...((profile.business_email ?? profile.email) ? { email: profile.business_email ?? profile.email } : {}),
+    ...(email ? { email } : {}),
     ...(profile.address ? { address: profile.address } : {}),
   };
 }
