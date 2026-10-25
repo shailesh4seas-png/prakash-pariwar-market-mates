@@ -3,8 +3,8 @@ import { useState } from "react";
 import { PageHeader } from "@/components/AppShell";
 import { TemplateCard } from "@/components/TemplateCard";
 import { TemplateModal } from "@/components/TemplateModal";
-import { CATEGORIES, TEMPLATES, type Template } from "@/lib/data";
-import { library, useLibrary } from "@/lib/library";
+import { CATEGORIES, type Template } from "@/lib/data";
+import { useRetailerLibrary, useRetailerTemplates } from "@/lib/use-templates";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/retailer/templates")({
@@ -27,13 +27,23 @@ export const Route = createFileRoute("/retailer/templates")({
 function Page() {
   const [cat, setCat] = useState("All");
   const [open, setOpen] = useState<Template | null>(null);
-  const lib = useLibrary();
-  const list = TEMPLATES.filter(
-    (t) => t.status === "published" && (cat === "All" || t.category === cat),
-  );
+  const { templates, isSample, loading, error } = useRetailerTemplates();
+  const lib = useRetailerLibrary(isSample);
+  const list = templates.filter((t) => cat === "All" || t.category === cat);
   return (
     <>
       <PageHeader title="Templates" desc="Every template shared by your manufacturer partners." />
+      {error && (
+        <p className="mb-4 rounded-2xl bg-destructive/10 p-4 text-sm text-destructive">
+          Templates could not be loaded: {error}
+        </p>
+      )}
+      {isSample && !loading && (
+        <p className="mb-4 rounded-2xl bg-accent p-4 text-sm text-accent-foreground">
+          You are viewing sample templates. Templates published by your manufacturers will appear
+          here once you are linked to them.
+        </p>
+      )}
       <div className="no-scrollbar mb-6 flex gap-2 overflow-x-auto">
         {CATEGORIES.map((c) => (
           <button
@@ -56,15 +66,11 @@ function Page() {
             className="w-full sm:w-full"
             onOpen={setOpen}
             saved={lib.saved.includes(t.id)}
-            onToggleSave={(x) => library.toggleSave(x.id)}
+            onToggleSave={lib.toggleSave}
           />
         ))}
       </div>
-      <TemplateModal
-        template={open}
-        onClose={() => setOpen(null)}
-        onDownload={(t) => library.addDownload(t.id)}
-      />
+      <TemplateModal template={open} onClose={() => setOpen(null)} onDownload={lib.addDownload} />
     </>
   );
 }

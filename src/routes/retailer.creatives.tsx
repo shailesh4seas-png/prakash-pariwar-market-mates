@@ -3,8 +3,7 @@ import { Download, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/AppShell";
 import { TemplatePoster } from "@/components/TemplateCard";
-import { byIds } from "@/lib/data";
-import { useLibrary } from "@/lib/library";
+import { useRetailerLibrary, useRetailerTemplates } from "@/lib/use-templates";
 
 export const Route = createFileRoute("/retailer/creatives")({
   head: () => ({
@@ -21,13 +20,15 @@ export const Route = createFileRoute("/retailer/creatives")({
 });
 
 function Page() {
-  const lib = useLibrary();
+  const { templates, isSample } = useRetailerTemplates();
+  const lib = useRetailerLibrary(isSample);
   return (
     <>
       <PageHeader title="My Creatives" desc="Personalised creatives you've downloaded." />
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         {lib.downloads.map((d) => {
-          const t = byIds([d.id])[0]!;
+          const t = templates.find((x) => x.id === d.id);
+          if (!t) return null;
           return (
             <div key={d.id} className="rounded-2xl bg-card p-2 shadow-card">
               <TemplatePoster t={t} />
@@ -57,6 +58,11 @@ function Page() {
           );
         })}
       </div>
+      {!lib.downloads.length && (
+        <p className="rounded-2xl bg-card p-8 text-center text-sm text-muted-foreground">
+          Creatives you download from Templates will appear here.
+        </p>
+      )}
     </>
   );
 }

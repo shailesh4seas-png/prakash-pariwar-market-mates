@@ -1,6 +1,7 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ImageIcon } from "lucide-react";
-import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { ImageIcon, Upload } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/AppShell";
 import { LogoMark } from "@/components/Logo";
@@ -15,7 +16,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CATEGORIES, TEMPLATES } from "@/lib/data";
+import { CATEGORIES, TEMPLATES, type Category, type TemplateStatus } from "@/lib/data";
+import { useSession } from "@/lib/session";
+import {
+  createTemplate,
+  updateTemplate,
+  uploadTemplateImage,
+  type LogoPosition,
+} from "@/lib/templates";
+import { useManufacturerTemplates } from "@/lib/use-templates";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/manufacturer/editor")({
@@ -38,20 +47,128 @@ export const Route = createFileRoute("/manufacturer/editor")({
   component: Page,
 });
 
-const POS = ["top-left", "top-right", "bottom-left", "bottom-right"] as const;
+const POS: readonly LogoPosition[] = ["top-left", "top-right", "bottom-left", "bottom-right"];
 const MEDIA = Array.from(new Set(TEMPLATES.map((t) => t.image)));
 
 function Page() {
   const { id } = Route.useSearch();
-  const base = TEMPLATES.find((t) => t.id === id) ?? TEMPLATES[0]!;
+  const { authUser, activeProfile } = useSession();
+  const { rows, templates, loading } = useManufacturerTemplates();
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const [title, setTitle] = useState(id ? base.title : "Untitled template");
-  const [cat, setCat] = useState<string>(base.category);
-  const [img, setImg] = useState(base.image);
-  const [headline, setHeadline] = useState(base.headline);
-  const [sub, setSub] = useState(base.sub);
+  const row = id ? rows.find((r) => r.id === id) : undefined;
+  const existing = id ? templates.find((t) => t.id === id) : undefined;
+  const [title, setTitle] = useState("Untitled template");
+  const [cat, setCat] = useState<string>("Festival");
+  const [img, setImg] = useState(MEDIA[0] ?? "");
+  const [file, setFile] = useState<File | null>(null);
+  const [stockImage, setStockImage] = useState<string | null>(id ? null : (MEDIA[0] ?? null));
+  const [headline, setHeadline] = useState("Your headline");
+  const [sub, setSub] = useState("Special offer");
   const [cta, setCta] = useState("Visit store today");
-  const [pos, setPos] = useState<(typeof POS)[number]>("top-left");
+  const [pos, setPos] = useState<LogoPosition>("top-left");
+  const [saving, setSaving] = useState(false);
+  const fileInput = useRef<HTMLInputElement>(null);
+  const initialised = useRef(false);
+
+  useEffect(() => {
+    if (!row || !existing || initialised.current) return;
+    initialised.current = true;
+    setTitle(row.title);
+    setCat(row.category);
+    setHeadline(row.headline);
+    setSub(row.sub);
+    setCta(row.cta);
+    setPos(row.logoPosition);
+    setImg(existing.image);
+  }, [row, existing]);
+
+  const chooseStock = (url: string) => {
+    setImg(url);
+    setStockImage(url);
+    setFile(null);
+  };
+
+  const chooseFile = (picked: File | undefined) => {
+    if (!picked) return;
+    if (!["image/png", "image/jpeg", "image/webp"].includes(picked.type)) {
+      toast.error("Use a PNG, JPG or WebP image.");
+      return;
+    }
+    if (picked.size > 5 * 1024 * 1024) {
+      toast.error("Image must be 5 MB or smaller.");
+      return;
+    }
+    setImg(URL.createObjectURL(picked));
+    setFile(picked);
+    setStockImage(null);
+  };
+
+  /** Returns the new storage path, or undefined when the image is unchanged. */
+  const resolveImagePath = async (userId: string): Promise<string | undefined> => {
+    if (file) return uploadTemplateImage(userId, file);
+    if (stockImage) {
+      const blob = await (await fetch(stockImage)).blob();
+      return uploadTemplateImage(
+        userId,
+        new File([blob], "stock-background.jpg", { type: blob.type || "image/jpeg" }),
+      );
+    }
+    return undefined;
+  };
+
+  const save = async (status: TemplateStatus) => {
+    const userId = authUser?.id;
+    if (!userId) {
+      toast.error("Please sign in again to save this template.");
+      return;
+    }
+    if (!title.trim() || !headline.trim()) {
+      toast.error("Title and headline are required.");
+      return;
+    }
+    setSaving(true);
+    try {
+      const imagePath = await resolveImagePath(userId);
+      const values = {
+        title: title.trim(),
+        headline: headline.trim(),
+        sub: sub.trim(),
+        category: cat as Category,
+        status,
+        cta: cta.trim() || "Visit store today",
+        logoPosition: pos,
+      };
+      if (id) {
+        await updateTemplate(id, imagePath ? { ...values, imagePath } : values);
+      } else {
+        await createTemplate(userId, {
+          ...values,
+          brand: activeProfile?.business_name ?? "",
+          ...(imagePath ? { imagePath } : {}),
+        });
+      }
+      await queryClient.invalidateQueries({ queryKey: ["templates"] });
+      toast.success(status === "published" ? `“${title.trim()}” published` : "Draft saved");
+      void navigate({ to: "/manufacturer/templates" });
+    } catch (cause) {
+      toast.error(cause instanceof Error ? cause.message : "Could not save the template.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (id && loading) return <p className="text-sm text-muted-foreground">Loading template…</p>;
+  if (id && !row) {
+    return (
+      <p className="rounded-2xl bg-card p-8 text-center text-sm text-muted-foreground">
+        This template was not found.{" "}
+        <Link to="/manufacturer/templates" className="font-semibold text-primary">
+          Back to templates
+        </Link>
+      </p>
+    );
+  }
 
   const posCls = {
     "top-left": "left-3 top-3",
@@ -63,20 +180,18 @@ function Page() {
   return (
     <>
       <PageHeader
-        title={id ? `Edit · ${base.title}` : "New template"}
+        title={id ? `Edit · ${row?.title ?? title}` : "New template"}
         action={
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => toast.success("Draft saved")}>
+            <Button variant="outline" disabled={saving} onClick={() => void save("draft")}>
               Save draft
             </Button>
             <Button
               className="bg-gradient-primary shadow-glow"
-              onClick={() => {
-                toast.success(`“${title}” published to 54 retailers`);
-                navigate({ to: "/manufacturer/templates" });
-              }}
+              disabled={saving}
+              onClick={() => void save("published")}
             >
-              Publish
+              {saving ? "Saving…" : "Publish"}
             </Button>
           </div>
         }
@@ -93,7 +208,9 @@ function Page() {
               )}
             >
               <LogoMark className="h-6 w-6" />
-              <span className="font-display text-xs font-semibold text-gold">Jyoti</span>
+              <span className="font-display text-xs font-semibold text-gold">
+                {(activeProfile?.business_name || "Your brand").split(" ")[0]}
+              </span>
             </div>
             <div className="absolute inset-x-0 top-14 px-6 text-center">
               <p className="font-display text-3xl font-semibold text-primary-foreground drop-shadow sm:text-4xl">
@@ -139,7 +256,7 @@ function Page() {
                 {MEDIA.map((m) => (
                   <button
                     key={m}
-                    onClick={() => setImg(m)}
+                    onClick={() => chooseStock(m)}
                     className={cn(
                       "overflow-hidden rounded-lg ring-2",
                       img === m ? "ring-primary" : "ring-transparent",
@@ -149,6 +266,25 @@ function Page() {
                   </button>
                 ))}
               </div>
+              <input
+                ref={fileInput}
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                className="hidden"
+                onChange={(e) => {
+                  chooseFile(e.target.files?.[0]);
+                  e.target.value = "";
+                }}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-2 w-full"
+                onClick={() => fileInput.current?.click()}
+              >
+                <Upload className="h-4 w-4" /> Upload your own (PNG, JPG, WebP · max 5 MB)
+              </Button>
             </div>
             <div className="space-y-1.5">
               <Label>Headline</Label>

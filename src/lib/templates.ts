@@ -1,6 +1,8 @@
 import { supabase } from "@/lib/supabase";
 import type { Category, TemplateStatus } from "@/lib/data";
 
+export type LogoPosition = "top-left" | "top-right" | "bottom-left" | "bottom-right";
+
 export interface DbTemplate {
   id: string;
   manufacturerUserId: string;
@@ -10,6 +12,9 @@ export interface DbTemplate {
   category: Category;
   imagePath: string | null;
   status: TemplateStatus;
+  brand: string;
+  cta: string;
+  logoPosition: LogoPosition;
   createdAt: string;
   updatedAt: string;
 }
@@ -21,6 +26,9 @@ export type TemplateInput = {
   category: Category;
   imagePath?: string | null;
   status?: TemplateStatus;
+  brand?: string;
+  cta?: string;
+  logoPosition?: LogoPosition;
 };
 
 type Row = {
@@ -32,12 +40,21 @@ type Row = {
   category: Category;
   image_path: string | null;
   status: TemplateStatus;
+  brand: string;
+  cta: string;
+  logo_position: LogoPosition;
   created_at: string;
   updated_at: string;
 };
 
 const COLUMNS =
-  "id, manufacturer_user_id, title, headline, sub, category, image_path, status, created_at, updated_at";
+  "id, manufacturer_user_id, title, headline, sub, category, image_path, status, brand, cta, logo_position, created_at, updated_at";
+
+const IMAGE_EXTENSIONS: Record<string, string | undefined> = {
+  "image/png": "png",
+  "image/jpeg": "jpg",
+  "image/webp": "webp",
+};
 
 function client() {
   if (!supabase) throw new Error("Supabase is not configured.");
@@ -53,6 +70,9 @@ const fromRow = (r: Row): DbTemplate => ({
   category: r.category,
   imagePath: r.image_path,
   status: r.status,
+  brand: r.brand,
+  cta: r.cta,
+  logoPosition: r.logo_position,
   createdAt: r.created_at,
   updatedAt: r.updated_at,
 });
@@ -78,6 +98,9 @@ export async function createTemplate(userId: string, input: TemplateInput): Prom
       category: input.category,
       image_path: input.imagePath ?? null,
       status: input.status ?? "draft",
+      brand: input.brand ?? "",
+      cta: input.cta ?? "Visit store today",
+      logo_position: input.logoPosition ?? "top-left",
     })
     .select(COLUMNS)
     .single();
@@ -85,7 +108,10 @@ export async function createTemplate(userId: string, input: TemplateInput): Prom
   return fromRow(data as Row);
 }
 
-export async function updateTemplate(id: string, input: Partial<TemplateInput>): Promise<DbTemplate> {
+export async function updateTemplate(
+  id: string,
+  input: Partial<TemplateInput>,
+): Promise<DbTemplate> {
   const patch: Record<string, unknown> = {};
   if (input.title !== undefined) patch["title"] = input.title;
   if (input.headline !== undefined) patch["headline"] = input.headline;
@@ -93,6 +119,9 @@ export async function updateTemplate(id: string, input: Partial<TemplateInput>):
   if (input.category !== undefined) patch["category"] = input.category;
   if (input.imagePath !== undefined) patch["image_path"] = input.imagePath;
   if (input.status !== undefined) patch["status"] = input.status;
+  if (input.brand !== undefined) patch["brand"] = input.brand;
+  if (input.cta !== undefined) patch["cta"] = input.cta;
+  if (input.logoPosition !== undefined) patch["logo_position"] = input.logoPosition;
   const { data, error } = await client()
     .from("templates")
     .update(patch)
@@ -110,7 +139,7 @@ export async function deleteTemplate(id: string): Promise<void> {
 
 /** Uploads template art under `<userId>/templates/<uuid>.<ext>` and returns the storage path. */
 export async function uploadTemplateImage(userId: string, file: File): Promise<string> {
-  const ext = { "image/png": "png", "image/jpeg": "jpg", "image/webp": "webp" }[file.type];
+  const ext = IMAGE_EXTENSIONS[file.type];
   if (!ext) throw new Error("Use a PNG, JPG or WebP image.");
   if (file.size > 5 * 1024 * 1024) throw new Error("Image must be 5 MB or smaller.");
   const path = `${userId}/templates/${crypto.randomUUID()}.${ext}`;
@@ -155,7 +184,7 @@ export async function recordTemplateDownload(templateId: string): Promise<void> 
   if (error) throw error;
 }
 
-export async function listRecentDownloads(limit = 20) {
+export async function listRecentDownloads(limit = 50) {
   const { data, error } = await client()
     .from("template_downloads")
     .select("template_id, created_at")

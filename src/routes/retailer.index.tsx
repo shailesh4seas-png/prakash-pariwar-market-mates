@@ -24,16 +24,8 @@ import holi from "@/assets/tpl-holi.jpg";
 import navratri from "@/assets/tpl-navratri.jpg";
 import { TemplateCard } from "@/components/TemplateCard";
 import { TemplateModal } from "@/components/TemplateModal";
-import {
-  CATEGORIES,
-  NEW_TEMPLATES,
-  RECOMMENDED,
-  TEMPLATES,
-  TRENDING,
-  byIds,
-  type Template,
-} from "@/lib/data";
-import { library, useLibrary } from "@/lib/library";
+import { CATEGORIES, NEW_TEMPLATES, RECOMMENDED, TRENDING, type Template } from "@/lib/data";
+import { pickTemplates, useRetailerLibrary, useRetailerTemplates } from "@/lib/use-templates";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/retailer/")({
@@ -193,9 +185,18 @@ function Section({
   );
 }
 
-function Row({ items, onOpen }: { items: Template[]; onOpen: (t: Template) => void }) {
+function Row({
+  items,
+  onOpen,
+  saved,
+  onToggleSave,
+}: {
+  items: Template[];
+  onOpen: (t: Template) => void;
+  saved: string[];
+  onToggleSave: (t: Template) => void;
+}) {
   const ref = useRef<HTMLDivElement>(null);
-  const lib = useLibrary();
   return (
     <div className="relative">
       <div ref={ref} className="no-scrollbar -mx-1 flex snap-x gap-4 overflow-x-auto px-1 pb-3">
@@ -204,8 +205,8 @@ function Row({ items, onOpen }: { items: Template[]; onOpen: (t: Template) => vo
             key={t.id}
             t={t}
             onOpen={onOpen}
-            saved={lib.saved.includes(t.id)}
-            onToggleSave={(x) => library.toggleSave(x.id)}
+            saved={saved.includes(t.id)}
+            onToggleSave={onToggleSave}
             className="snap-start"
           />
         ))}
@@ -225,19 +226,38 @@ function RetailerHome() {
   const [open, setOpen] = useState<Template | null>(null);
   const [cat, setCat] = useState<string>("All");
   const [q, setQ] = useState("");
-  const lib = useLibrary();
+  const { templates, isSample, loading, error } = useRetailerTemplates();
+  const lib = useRetailerLibrary(isSample);
 
-  const filtered = TEMPLATES.filter(
+  const filtered = templates.filter(
     (t) =>
-      t.status === "published" &&
       (cat === "All" || t.category === cat) &&
       (t.title + t.headline).toLowerCase().includes(q.toLowerCase()),
   );
+  const trending = isSample ? TRENDING : [];
+  const fresh = isSample
+    ? NEW_TEMPLATES.filter((t) => t.status === "published").concat(
+        NEW_TEMPLATES.filter((t) => t.status !== "published"),
+      )
+    : templates.slice(0, 6);
+  const recommended = isSample ? RECOMMENDED : templates.slice(6, 12);
   const filtering = cat !== "All" || q.length > 0;
 
   return (
     <div className="space-y-10">
       <Hero />
+
+      {error && (
+        <p className="rounded-2xl bg-destructive/10 p-4 text-sm text-destructive">
+          Templates could not be loaded: {error}
+        </p>
+      )}
+      {isSample && !loading && (
+        <p className="rounded-2xl bg-accent p-4 text-sm text-accent-foreground">
+          You are viewing sample templates. Templates published by your manufacturers will appear
+          here once you are linked to them.
+        </p>
+      )}
 
       <div className="rounded-2xl bg-card p-4 shadow-card">
         <div className="relative">
@@ -271,7 +291,12 @@ function RetailerHome() {
           desc={`${filtered.length} templates found`}
         >
           {filtered.length ? (
-            <Row items={filtered} onOpen={setOpen} />
+            <Row
+              items={filtered}
+              onOpen={setOpen}
+              saved={lib.saved}
+              onToggleSave={lib.toggleSave}
+            />
           ) : (
             <p className="rounded-2xl bg-card p-8 text-center text-sm text-muted-foreground">
               No templates match. Try another festival or product.
@@ -280,14 +305,16 @@ function RetailerHome() {
         </Section>
       )}
 
-      <Section
-        id="trending"
-        icon={Flame}
-        title="Trending Templates"
-        desc="Most popular templates for your business"
-      >
-        <Row items={TRENDING} onOpen={setOpen} />
-      </Section>
+      {trending.length > 0 && (
+        <Section
+          id="trending"
+          icon={Flame}
+          title="Trending Templates"
+          desc="Most popular templates for your business"
+        >
+          <Row items={trending} onOpen={setOpen} saved={lib.saved} onToggleSave={lib.toggleSave} />
+        </Section>
+      )}
 
       <section>
         <div className="mb-4 flex items-center gap-3">
@@ -317,22 +344,30 @@ function RetailerHome() {
         </div>
       </section>
 
-      <Section icon={Sparkles} title="New Templates" desc="Fresh designs to keep your brand active">
-        <Row
-          items={NEW_TEMPLATES.filter((t) => t.status === "published").concat(
-            NEW_TEMPLATES.filter((t) => t.status !== "published"),
-          )}
-          onOpen={setOpen}
-        />
-      </Section>
+      {fresh.length > 0 && (
+        <Section
+          icon={Sparkles}
+          title="New Templates"
+          desc="Fresh designs to keep your brand active"
+        >
+          <Row items={fresh} onOpen={setOpen} saved={lib.saved} onToggleSave={lib.toggleSave} />
+        </Section>
+      )}
 
-      <Section
-        icon={Target}
-        title="Recommended for You"
-        desc="Based on your business type: Electronics & Home Appliances"
-      >
-        <Row items={RECOMMENDED} onOpen={setOpen} />
-      </Section>
+      {recommended.length > 0 && (
+        <Section
+          icon={Target}
+          title="Recommended for You"
+          desc="Based on your business type: Electronics & Home Appliances"
+        >
+          <Row
+            items={recommended}
+            onOpen={setOpen}
+            saved={lib.saved}
+            onToggleSave={lib.toggleSave}
+          />
+        </Section>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-2xl bg-card p-5 shadow-card">
@@ -341,7 +376,7 @@ function RetailerHome() {
             <span className="text-sm font-normal text-muted-foreground">({lib.saved.length})</span>
           </h3>
           <div className="mt-4 grid grid-cols-3 gap-3">
-            {byIds(lib.saved)
+            {pickTemplates(lib.saved, templates)
               .slice(0, 6)
               .map((t) => (
                 <button key={t.id} onClick={() => setOpen(t)} className="text-left">
@@ -367,7 +402,8 @@ function RetailerHome() {
           </h3>
           <ul className="mt-4 divide-y">
             {lib.downloads.slice(0, 5).map((d) => {
-              const t = byIds([d.id])[0]!;
+              const t = templates.find((x) => x.id === d.id);
+              if (!t) return null;
               return (
                 <li key={d.id} className="flex items-center gap-3 py-2.5">
                   <img
@@ -393,11 +429,7 @@ function RetailerHome() {
         </div>
       </div>
 
-      <TemplateModal
-        template={open}
-        onClose={() => setOpen(null)}
-        onDownload={(t) => library.addDownload(t.id)}
-      />
+      <TemplateModal template={open} onClose={() => setOpen(null)} onDownload={lib.addDownload} />
     </div>
   );
 }

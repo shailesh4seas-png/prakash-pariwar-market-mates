@@ -11,7 +11,8 @@ import {
 } from "lucide-react";
 import heroDiwali from "@/assets/hero-diwali.jpg";
 import { Panel, StatusBadge } from "@/components/shared";
-import { CAMPAIGNS, RETAILERS, TEMPLATES } from "@/lib/data";
+import { CAMPAIGNS, RETAILERS } from "@/lib/data";
+import { useManufacturerTemplates } from "@/lib/use-templates";
 
 export const Route = createFileRoute("/manufacturer/")({
   head: () => ({
@@ -67,8 +68,9 @@ const ACTIVITY: [string, string, string][] = [
 ];
 
 function Overview() {
-  const pub = TEMPLATES.filter((t) => t.status === "published").length;
-  const draft = TEMPLATES.filter((t) => t.status === "draft").length;
+  const { templates } = useManufacturerTemplates();
+  const pub = templates.filter((t) => t.status === "published").length;
+  const draft = templates.filter((t) => t.status === "draft").length;
   const active = RETAILERS.filter((r) => r.status === "active").length;
   const pending = RETAILERS.filter((r) => r.status === "pending").length;
   return (
@@ -109,7 +111,7 @@ function Overview() {
         <Stat
           icon={LayoutTemplate}
           label="Total templates"
-          value={TEMPLATES.length}
+          value={templates.length}
           note="+4 this month"
         />
         <Stat icon={CheckCircle2} label="Published" value={pub} note="Live for retailers" />
@@ -164,7 +166,7 @@ function Overview() {
 
       <Panel title="Upcoming scheduled content">
         <div className="no-scrollbar flex gap-4 overflow-x-auto pb-2">
-          {TEMPLATES.slice(0, 6).map((t, i) => (
+          {templates.slice(0, 6).map((t, i) => (
             <div key={t.id} className="w-40 shrink-0">
               <img
                 src={t.image}

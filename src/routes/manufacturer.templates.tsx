@@ -4,7 +4,8 @@ import { useState } from "react";
 import { PageHeader } from "@/components/AppShell";
 import { StatusBadge } from "@/components/shared";
 import { TemplateModal } from "@/components/TemplateModal";
-import { TEMPLATES, type Template } from "@/lib/data";
+import type { Template } from "@/lib/data";
+import { useManufacturerTemplates } from "@/lib/use-templates";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/manufacturer/templates")({
@@ -33,7 +34,8 @@ function Page() {
   const [f, setF] = useState<(typeof FILTERS)[number]>("all");
   const [q, setQ] = useState("");
   const [preview, setPreview] = useState<Template | null>(null);
-  const list = TEMPLATES.filter(
+  const { templates, loading, error } = useManufacturerTemplates();
+  const list = templates.filter(
     (t) => (f === "all" || t.status === f) && t.title.toLowerCase().includes(q.toLowerCase()),
   );
   return (
@@ -73,12 +75,25 @@ function Page() {
             >
               {x}{" "}
               <span className="opacity-70">
-                {x === "all" ? TEMPLATES.length : TEMPLATES.filter((t) => t.status === x).length}
+                {x === "all" ? templates.length : templates.filter((t) => t.status === x).length}
               </span>
             </button>
           ))}
         </div>
       </div>
+      {error && (
+        <p className="mb-4 rounded-2xl bg-destructive/10 p-4 text-sm text-destructive">
+          Templates could not be loaded: {error}
+        </p>
+      )}
+      {loading && <p className="text-sm text-muted-foreground">Loading templates…</p>}
+      {!loading && !error && !list.length && (
+        <p className="rounded-2xl bg-card p-8 text-center text-sm text-muted-foreground">
+          {templates.length
+            ? "No templates match your search."
+            : "No templates yet. Create your first template to share it with your retailers."}
+        </p>
+      )}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         {list.map((t) => (
           <div key={t.id} className="group overflow-hidden rounded-2xl bg-card shadow-card">
