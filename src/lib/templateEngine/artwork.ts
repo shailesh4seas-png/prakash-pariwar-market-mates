@@ -70,7 +70,7 @@ export function themedComposition(category: string, variant: number, p: Palette,
   return {...base, slots, blocks:base.blocks.map(b=>({...b,cx:x,cy:positions[b.role],align,
     maxWidth:style===1||style===3?0.56:0.68,color,
     sizeRatio:b.role==='headline'?(style===4?0.09:0.078):b.role==='subheadline'?0.029:0.027,
-    treatment:b.role==='offer'?'outline':undefined,letterSpacingEm:0,
+    treatment:b.role==='offer'?'outline':'none',letterSpacingEm:0,
   }))};
 }
 export function specArtwork(spec: TemplateSpec): string | undefined {

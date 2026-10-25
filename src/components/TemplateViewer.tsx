@@ -72,7 +72,7 @@ export function TemplateViewer({ template, open, onOpenChange }: TemplateViewerP
   const content = useMemo(
     () =>
       spec && template
-        ? composeContent({ manufacturer: template.manufacturer, retailer }, { overrides: spec.brandOverrides })
+        ? composeContent({ manufacturer: template.manufacturer, retailer }, { overrides: spec.brandOverrides ?? {} })
         : undefined,
     [spec, template, retailer],
   );

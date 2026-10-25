@@ -132,7 +132,7 @@ function Page() {
 
   const manufacturer = useMemo(() => brandFromProfile(activeProfile), [activeProfile]);
   const content = useMemo(
-    () => (spec ? composeContent({ manufacturer, retailer: { businessName: "Your Store" } }, { overrides: spec.brandOverrides }) : undefined),
+    () => (spec ? composeContent({ manufacturer, retailer: { businessName: "Your Store" } }, { overrides: spec.brandOverrides ?? {} }) : undefined),
     [spec, manufacturer],
   );
 

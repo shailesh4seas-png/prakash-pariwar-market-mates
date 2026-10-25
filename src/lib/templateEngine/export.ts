@@ -51,7 +51,7 @@ export interface ExportResult {
 export async function renderTemplateToBlob(spec: TemplateSpec, content: RenderContent = {}): Promise<ExportResult> {
   if (typeof document === "undefined") throw new Error("PNG export runs in the browser only.");
   const canvas = content.canvas ?? spec.canvas;
-  const merged = {...content, values: content.values?.map(v=>({...v,...spec.brandOverrides?.[v.field]}))};
+  const merged: RenderContent = {...content, ...(content.values ? { values: content.values.map(v=>({...v,...spec.brandOverrides?.[v.field]})) } : {})};
   const inlined = await buildContentWithInlinedLogos(merged);
   const exportSpec = {...spec, brandOverrides: {...spec.brandOverrides}};
   for (const [field, override] of Object.entries(exportSpec.brandOverrides)) {
