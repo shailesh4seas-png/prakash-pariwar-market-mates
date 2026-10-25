@@ -7,3 +7,4 @@ export * from "./catalog";
 export * from "./generator";
 export * from "./fit";
 export * from "./render";
+export * from "./export";

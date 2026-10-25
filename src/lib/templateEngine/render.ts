@@ -194,10 +194,18 @@ function renderSlot(
 
 /**
  * Renders a template spec to a standalone SVG string. The same output backs
- * grid thumbnails (via a small CSS size) and high-resolution PNG export, so the
- * WYSIWYG in the editor is exactly what gets downloaded.
+ * grid thumbnails (responsive) and high-resolution PNG export, so the WYSIWYG
+ * in the editor is exactly what gets downloaded.
+ *
+ * `responsive: true` omits fixed pixel width/height and lets the SVG fill its
+ * container via CSS. Display the SVG inline (not through an <img> data URL) so
+ * remote logo `<image href>` assets can actually load.
  */
-export function renderTemplateToSvg(spec: TemplateSpec, content: RenderContent = {}): string {
+export function renderTemplateToSvg(
+  spec: TemplateSpec,
+  content: RenderContent = {},
+  opts?: { responsive?: boolean; excludeSlots?: boolean },
+): string {
   const canvas = content.canvas ?? spec.canvas;
   const W = canvas.width;
   const H = canvas.height;
@@ -218,11 +226,16 @@ export function renderTemplateToSvg(spec: TemplateSpec, content: RenderContent =
       : "";
 
   const blocks = spec.blocks.map((b) => renderTextBlock(b, content.text?.[b.role], W, H)).join("");
-  const slots = spec.slots.map((s) => renderSlot(spec, s, content, W, H)).join("");
+  const slots = opts?.excludeSlots
+    ? ""
+    : spec.slots.map((s) => renderSlot(spec, s, content, W, H)).join("");
 
   const bgId = `bg-${clipId(spec, { id: "bg", field: "mfr_logo", cx: 0, cy: 0, w: 0, h: 0, style: "pill" })}`;
+  const sizeAttrs = opts?.responsive
+    ? `style="width:100%;height:auto;display:block" preserveAspectRatio="xMidYMid meet"`
+    : `width="${W}" height="${H}"`;
   return (
-    `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">` +
+    `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" ${sizeAttrs} viewBox="0 0 ${W} ${H}">` +
     defs +
     `<rect width="${W}" height="${H}" fill="url(#${bgId})"/>` +
     `<g>${motifLayer}</g>` +
