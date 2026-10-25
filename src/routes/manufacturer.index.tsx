@@ -11,7 +11,12 @@ import {
 } from "lucide-react";
 import heroDiwali from "@/assets/hero-diwali.jpg";
 import { Panel, StatusBadge } from "@/components/shared";
-import { CAMPAIGNS, RETAILERS, TEMPLATES } from "@/lib/data";
+import { TemplateSvg, composeContent } from "@/components/TemplateSvg";
+import { Skeleton } from "@/components/ui/skeleton";
+import { CAMPAIGNS, RETAILERS } from "@/lib/data";
+import { getCategory, daysUntilCategory, orderUpcomingFirst } from "@/lib/templateEngine";
+import { useSession } from "@/lib/session";
+import { brandFromProfile, useManufacturerTemplates } from "@/lib/templateQueries";
 
 export const Route = createFileRoute("/manufacturer/")({
   head: () => ({
@@ -67,10 +72,17 @@ const ACTIVITY: [string, string, string][] = [
 ];
 
 function Overview() {
-  const pub = TEMPLATES.filter((t) => t.status === "published").length;
-  const draft = TEMPLATES.filter((t) => t.status === "draft").length;
+  const { activeProfile } = useSession();
+  const templates = useManufacturerTemplates();
+  const brand = brandFromProfile(activeProfile);
+  const list = templates.data ?? [];
+  const total = list.length;
+  const pub = list.filter((t) => t.published).length;
+  const draft = total - pub;
   const active = RETAILERS.filter((r) => r.status === "active").length;
   const pending = RETAILERS.filter((r) => r.status === "pending").length;
+  const next = orderUpcomingFirst()[0];
+  const nextDays = next ? daysUntilCategory(next) : null;
   return (
     <div className="space-y-6">
       <section className="relative overflow-hidden rounded-3xl bg-gradient-festive">
@@ -82,10 +94,12 @@ function Overview() {
         <div className="absolute inset-0 bg-gradient-to-r from-sidebar via-sidebar/80 to-transparent" />
         <div className="relative px-6 py-8 sm:px-10">
           <p className="font-display text-sm font-semibold uppercase tracking-wider text-gold">
-            Namaste, Jyoti Appliances
+            Namaste, {brand.businessName || "there"}
           </p>
           <h1 className="mt-2 max-w-lg text-2xl font-extrabold text-primary-foreground sm:text-4xl">
-            Diwali is 17 days away. Your retailers are ready.
+            {next && nextDays !== null && nextDays > 0
+              ? `${next.label} is ${nextDays} day${nextDays === 1 ? "" : "s"} away. Your retailers are ready.`
+              : "Festive creatives your retailers can personalise in seconds."}
           </h1>
           <div className="mt-5 flex flex-wrap gap-3">
             <Link
@@ -109,11 +123,11 @@ function Overview() {
         <Stat
           icon={LayoutTemplate}
           label="Total templates"
-          value={TEMPLATES.length}
-          note="+4 this month"
+          value={total}
+          note="Saved designs"
         />
         <Stat icon={CheckCircle2} label="Published" value={pub} note="Live for retailers" />
-        <Stat icon={FileEdit} label="Drafts" value={draft} note="Finish before Diwali" />
+        <Stat icon={FileEdit} label="Drafts" value={draft} note="Not published yet" />
         <Stat icon={Users} label="Retailers" value={active} note="+2 this week" />
         <Stat icon={MailPlus} label="Pending invites" value={pending} note="Send a reminder" />
       </div>
@@ -162,21 +176,51 @@ function Overview() {
         </Panel>
       </div>
 
-      <Panel title="Upcoming scheduled content">
-        <div className="no-scrollbar flex gap-4 overflow-x-auto pb-2">
-          {TEMPLATES.slice(0, 6).map((t, i) => (
-            <div key={t.id} className="w-40 shrink-0">
-              <img
-                src={t.image}
-                alt={t.title}
-                loading="lazy"
-                className="aspect-square w-full rounded-xl object-cover"
-              />
-              <p className="mt-2 truncate text-sm font-semibold">{t.title}</p>
-              <p className="text-xs text-muted-foreground">Nov {i * 3 + 1}, 10:00 AM</p>
-            </div>
-          ))}
-        </div>
+      <Panel
+        title="Your latest templates"
+        action={
+          <Link
+            to="/manufacturer/saved"
+            className="flex items-center gap-1 text-sm font-semibold text-primary"
+          >
+            All <ArrowRight className="h-4 w-4" />
+          </Link>
+        }
+      >
+        {templates.isLoading ? (
+          <div className="no-scrollbar flex gap-4 overflow-x-auto pb-2">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-40 w-40 shrink-0 rounded-xl" />
+            ))}
+          </div>
+        ) : list.length === 0 ? (
+          <p className="py-6 text-center text-sm text-muted-foreground">
+            No templates yet. Create one to get started.
+          </p>
+        ) : (
+          <div className="no-scrollbar flex gap-4 overflow-x-auto pb-2">
+            {list.slice(0, 8).map((t) => (
+              <div key={t.id} className="w-40 shrink-0">
+                <div className="aspect-square w-full overflow-hidden rounded-xl">
+                  <TemplateSvg
+                    spec={t.spec}
+                    content={composeContent({
+                      manufacturer: brand,
+                      retailer: { businessName: "Your Store" },
+                    })}
+                    className="h-full w-full"
+                    ariaLabel={t.title}
+                  />
+                </div>
+                <p className="mt-2 truncate text-sm font-semibold">{t.title}</p>
+                <p className="text-xs text-muted-foreground">
+                  {getCategory(t.categoryKey)?.label ?? t.categoryKey}
+                  {t.published ? " · Published" : " · Draft"}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
       </Panel>
     </div>
   );
