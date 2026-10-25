@@ -13,6 +13,8 @@ import {
   type CanvasKind,
 } from "@/lib/templateEngine";
 import { useManufacturerTemplates } from "@/lib/templateQueries";
+import { Button } from "@/components/ui/button";
+import { FestivalCollectionHeader } from "@/components/FestivalCollectionHeader";
 
 export const Route = createFileRoute("/manufacturer/templates")({
   head: () => ({
@@ -23,6 +25,10 @@ export const Route = createFileRoute("/manufacturer/templates")({
         content: "Pick a festival or season and start from one of 30 brand-ready designs.",
       },
       { name: "robots", content: "noindex" },
+      { property: "og:title", content: "Festival templates · Prakash Pariwar" },
+      { property: "og:description", content: "Distinct festival artwork for manufacturers and retailers." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Page,
@@ -71,17 +77,18 @@ function Page() {
         title={category?.label ?? "Templates"}
         desc={`30 ${canvasKind} designs — pick one to open the editor.`}
         action={
-          <button
+          <Button variant="outline"
             onClick={() => setPicked(null)}
             className="flex w-fit items-center gap-2 rounded-xl border bg-card px-4 py-2.5 text-sm font-semibold hover:bg-muted"
           >
             <ArrowLeft className="h-4 w-4" /> All categories
-          </button>
+          </Button>
         }
       />
+      <FestivalCollectionHeader categoryKey={picked}/>
       <div className="mb-4 flex gap-1 rounded-xl bg-card p-1 shadow-card w-fit">
         {(["post", "story"] as CanvasKind[]).map((k) => (
-          <button
+          <Button variant="ghost"
             key={k}
             onClick={() => setCanvasKind(k)}
             className={
@@ -92,7 +99,7 @@ function Page() {
             }
           >
             {k}
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -103,13 +110,13 @@ function Page() {
           ))}
         </div>
       ) : (
-        <Panel className="p-4">
+        <div>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {designs.map((spec, i) => (
               <Link
                 key={spec.id}
                 to="/manufacturer/editor"
-                search={{ category: picked, index: i }}
+                search={{ category: picked, index: i, canvas: canvasKind }}
                 className="group overflow-hidden rounded-2xl ring-1 ring-transparent transition hover:ring-primary/50"
               >
                 <div className="relative overflow-hidden bg-muted">
@@ -131,7 +138,7 @@ function Page() {
               </Link>
             ))}
           </div>
-        </Panel>
+        </div>
       )}
     </>
   );
