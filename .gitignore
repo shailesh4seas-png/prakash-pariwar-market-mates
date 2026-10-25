@@ -34,3 +34,7 @@ dist-ssr
 
 # Local Supabase CLI temporary files
 supabase/.temp/
+
+# Delivered format-patch bundles (duplicates of committed history; not source)
+rebuilt-patches/
+rebuilt-patches.zip
