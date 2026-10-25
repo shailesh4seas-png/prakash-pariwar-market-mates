@@ -1,13 +1,21 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ImageIcon } from "lucide-react";
-import { useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
+import {
+  Loader2,
+  Palette,
+  RotateCcw,
+  Save,
+  Send,
+  Sparkles,
+  LayoutTemplate,
+} from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/AppShell";
-import { LogoMark } from "@/components/Logo";
 import { Panel } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -15,173 +23,318 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CATEGORIES, TEMPLATES } from "@/lib/data";
-import { cn } from "@/lib/utils";
+import { TemplateSvg, composeContent } from "@/components/TemplateSvg";
+import { PlaceholderEditor } from "@/components/PlaceholderEditor";
+import { SendToRetailersDialog } from "@/components/SendToRetailersDialog";
+import {
+  MANUFACTURER_FIELDS,
+  RETAILER_FIELDS,
+  getCategory,
+  generateTemplate,
+  paletteChoicesFor,
+  recomposeSpec,
+  cycleBackgroundVariant,
+  moveSlot,
+  resizeSlot,
+  resetLayout,
+  setBlockText,
+  type CanvasKind,
+  type PlaceholderField,
+  type TemplateSpec,
+  type TextRole,
+} from "@/lib/templateEngine";
+import { useSession } from "@/lib/session";
+import {
+  brandFromProfile,
+  buildDraft,
+  useCreateAndPublish,
+  useCreateAndSend,
+  useManufacturerTemplates,
+  useSaveDraft,
+  useSendTargets,
+  useTemplateRecipients,
+} from "@/lib/templateQueries";
 
 export const Route = createFileRoute("/manufacturer/editor")({
   head: () => ({
     meta: [
       { title: "Template editor · Prakash Pariwar" },
-      { name: "description", content: "Template editor for Prakash Pariwar business members." },
-      { property: "og:title", content: "Template editor · Prakash Pariwar" },
-      {
-        property: "og:description",
-        content: "Template editor for Prakash Pariwar business members.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
+      { name: "description", content: "Design a branded festival or product template." },
+      { name: "robots", content: "noindex" },
     ],
   }),
-  validateSearch: (s: Record<string, unknown>): { id?: string | undefined } => ({
+  validateSearch: (s: Record<string, unknown>): {
+    category?: string | undefined;
+    index?: number | undefined;
+    id?: string | undefined;
+  } => ({
+    category: typeof s["category"] === "string" ? s["category"] : undefined,
+    index: typeof s["index"] === "number" && Number.isFinite(s["index"]) ? s["index"] : undefined,
     id: typeof s["id"] === "string" ? s["id"] : undefined,
   }),
   component: Page,
 });
 
-const POS = ["top-left", "top-right", "bottom-left", "bottom-right"] as const;
-const MEDIA = Array.from(new Set(TEMPLATES.map((t) => t.image)));
+const ALL_FIELDS: Set<PlaceholderField> = new Set([...MANUFACTURER_FIELDS, ...RETAILER_FIELDS]);
+const ROLE_LABEL: Record<TextRole, string> = {
+  headline: "Headline",
+  subheadline: "Sub-headline",
+  offer: "Offer badge",
+  cta: "Call to action",
+};
+
+function initialSpec(
+  category: string | undefined,
+  index: number | undefined,
+  canvasKind: CanvasKind,
+): TemplateSpec {
+  return generateTemplate(category ?? "diwali", index ?? 0, canvasKind);
+}
 
 function Page() {
-  const { id } = Route.useSearch();
-  const base = TEMPLATES.find((t) => t.id === id) ?? TEMPLATES[0]!;
+  const { category, index, id } = Route.useSearch();
   const navigate = useNavigate();
-  const [title, setTitle] = useState(id ? base.title : "Untitled template");
-  const [cat, setCat] = useState<string>(base.category);
-  const [img, setImg] = useState(base.image);
-  const [headline, setHeadline] = useState(base.headline);
-  const [sub, setSub] = useState(base.sub);
-  const [cta, setCta] = useState("Visit store today");
-  const [pos, setPos] = useState<(typeof POS)[number]>("top-left");
+  const { activeProfile } = useSession();
 
-  const posCls = {
-    "top-left": "left-3 top-3",
-    "top-right": "right-3 top-3",
-    "bottom-left": "left-3 bottom-16",
-    "bottom-right": "right-3 bottom-16",
-  }[pos];
+  const ownTemplates = useManufacturerTemplates();
+  const loaded = id ? ownTemplates.data?.find((t) => t.id === id) : undefined;
+
+  const [spec, setSpec] = useState<TemplateSpec | null>(null);
+  const [title, setTitle] = useState("");
+
+  useEffect(() => {
+    if (id) {
+      if (loaded) {
+        setSpec(loaded.spec);
+        setTitle(loaded.title);
+      }
+    } else {
+      setSpec(initialSpec(category, index, "post"));
+      setTitle(`${getCategory(category ?? "diwali")?.label ?? "Festival"} template`);
+    }
+    // Re-seed only when the route target changes.
+  }, [id, loaded, category, index]);
+
+  const recipients = useTemplateRecipients(id ?? null);
+  const sendTargets = useSendTargets(true);
+  const saveDraft = useSaveDraft();
+  const createAndSend = useCreateAndSend();
+  const createAndPublish = useCreateAndPublish();
+
+  const [sendOpen, setSendOpen] = useState(false);
+
+  const manufacturer = useMemo(() => brandFromProfile(activeProfile), [activeProfile]);
+  const content = useMemo(
+    () => (spec ? composeContent({ manufacturer, retailer: { businessName: "Your Store" } }) : undefined),
+    [spec, manufacturer],
+  );
+
+  if (!spec) {
+    return (
+      <>
+        <PageHeader title="Template editor" />
+        {id && ownTemplates.isLoading ? (
+          <Skeleton className="h-[60vh] w-full rounded-3xl" />
+        ) : (
+          <Panel>
+            <p className="text-sm text-muted-foreground">
+              Pick a festival or season first, then choose one of its 30 designs.
+            </p>
+            <Link
+              to="/manufacturer/templates"
+              className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gradient-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow"
+            >
+              <LayoutTemplate className="h-4 w-4" /> Browse categories
+            </Link>
+          </Panel>
+        )}
+      </>
+    );
+  }
+
+  const presentRoles = (["headline", "subheadline", "offer", "cta"] as TextRole[]).filter((r) =>
+    spec.blocks.some((b) => b.role === r),
+  );
+  const textOf = (role: TextRole) => spec.blocks.find((b) => b.role === role)?.defaultText ?? "";
+
+  const run = async (label: string, action: () => Promise<unknown>) => {
+    try {
+      await action();
+      toast.success(label);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : `${label} failed.`);
+    }
+  };
+
+  const draft = () => buildDraft({ templateId: id ?? null, spec, title });
 
   return (
     <>
       <PageHeader
-        title={id ? `Edit · ${base.title}` : "New template"}
+        title={id ? `Edit · ${title}` : "New template"}
+        desc="Drag the branded placeholders to fine-tune the layout, then save, send or publish."
         action={
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => toast.success("Draft saved")}>
-              Save draft
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              disabled={saveDraft.isPending}
+              onClick={() =>
+                run("Saved to your templates", () =>
+                  saveDraft.mutateAsync(draft()).then((newId) =>
+                    navigate({ to: "/manufacturer/saved", search: { edit: newId } }),
+                  ),
+                )
+              }
+            >
+              {saveDraft.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+              Save
+            </Button>
+            <Button variant="outline" onClick={() => setSendOpen(true)}>
+              <Send className="mr-2 h-4 w-4" /> Send to retailers
             </Button>
             <Button
               className="bg-gradient-primary shadow-glow"
-              onClick={() => {
-                toast.success(`“${title}” published to 54 retailers`);
-                navigate({ to: "/manufacturer/templates" });
-              }}
+              disabled={createAndPublish.isPending}
+              onClick={() =>
+                run("Published to your retailers", () => createAndPublish.mutateAsync(draft()))
+              }
             >
+              {createAndPublish.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Sparkles className="mr-2 h-4 w-4" />
+              )}
               Publish
             </Button>
           </div>
         }
       />
-      <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
-        <Panel className="flex items-center justify-center bg-muted">
-          <div className="relative aspect-square w-full max-w-md overflow-hidden rounded-2xl shadow-glow">
-            <img src={img} alt="" className="h-full w-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-b from-foreground/70 via-transparent to-foreground/70" />
-            <div
-              className={cn(
-                "absolute flex items-center gap-1 rounded-lg bg-sidebar/80 px-2 py-1",
-                posCls,
-              )}
-            >
-              <LogoMark className="h-6 w-6" />
-              <span className="font-display text-xs font-semibold text-gold">Jyoti</span>
+
+      <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+        <Panel className="bg-muted">
+          <div className="mx-auto w-full max-w-md">
+            <div className="relative aspect-square w-full overflow-hidden rounded-2xl shadow-glow">
+              <TemplateSvg
+                spec={spec}
+                content={content ?? {}}
+                className="h-full w-full"
+                ariaLabel={title}
+              />
+              <PlaceholderEditor
+                spec={spec}
+                editableFields={ALL_FIELDS}
+                onMove={(slotId, next) => setSpec((s) => (s ? moveSlot(s, slotId, next) : s))}
+                onResize={(slotId, next) => setSpec((s) => (s ? resizeSlot(s, slotId, next) : s))}
+              />
             </div>
-            <div className="absolute inset-x-0 top-14 px-6 text-center">
-              <p className="font-display text-3xl font-semibold text-primary-foreground drop-shadow sm:text-4xl">
-                {headline}
-              </p>
-              <span className="mt-2 inline-block rounded-full bg-gold px-3 py-1 text-xs font-bold uppercase text-gold-foreground">
-                {sub}
-              </span>
-            </div>
-            <div className="absolute inset-x-0 bottom-4 text-center">
-              <span className="rounded-full bg-card px-4 py-2 text-sm font-semibold text-foreground">
-                {cta}
-              </span>
-            </div>
+            <p className="mt-3 text-center text-xs text-muted-foreground">
+              Gold boxes are placeholders — drag the box, or its corner handle to resize. Arrow keys nudge.
+            </p>
           </div>
         </Panel>
-        <Panel title="Content">
-          <div className="space-y-4">
-            <div className="space-y-1.5">
-              <Label>Title</Label>
-              <Input value={title} onChange={(e) => setTitle(e.target.value)} />
+
+        <div className="space-y-6">
+          <Panel title="Details">
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="tpl-title">Title</Label>
+                <Input
+                  id="tpl-title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  maxLength={200}
+                />
+              </div>
+              {presentRoles.map((role) => (
+                <div key={role} className="space-y-1.5">
+                  <Label htmlFor={`txt-${role}`}>{ROLE_LABEL[role]}</Label>
+                  <Input
+                    id={`txt-${role}`}
+                    value={textOf(role)}
+                    onChange={(e) =>
+                      setSpec((s) => (s ? setBlockText(s, role, e.target.value) : s))
+                    }
+                  />
+                </div>
+              ))}
             </div>
-            <div className="space-y-1.5">
-              <Label>Category</Label>
-              <Select value={cat} onValueChange={setCat}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {CATEGORIES.filter((c) => c !== "All").map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {c}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label className="flex items-center gap-1">
-                <ImageIcon className="h-4 w-4" /> Background media
-              </Label>
-              <div className="grid grid-cols-4 gap-2">
-                {MEDIA.map((m) => (
-                  <button
-                    key={m}
-                    onClick={() => setImg(m)}
-                    className={cn(
-                      "overflow-hidden rounded-lg ring-2",
-                      img === m ? "ring-primary" : "ring-transparent",
-                    )}
+          </Panel>
+
+          <Panel title="Design">
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="flex items-center gap-1">
+                    <Palette className="h-4 w-4" /> Colour
+                  </Label>
+                  <Select
+                    value={spec.palette.id}
+                    onValueChange={(paletteId) =>
+                      setSpec((s) => (s ? recomposeSpec(s, { paletteId }) : s))
+                    }
                   >
-                    <img src={m} alt="" className="aspect-square w-full object-cover" />
-                  </button>
-                ))}
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {paletteChoicesFor(spec.categoryKey).map((pid) => (
+                        <SelectItem key={pid} value={pid}>
+                          {pid.replace(/([A-Z])/g, " $1").trim()}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Canvas size</Label>
+                  <Select
+                    value={spec.canvas.kind}
+                    onValueChange={(kind) =>
+                      setSpec((s) =>
+                        s ? recomposeSpec(s, { canvasKind: kind as CanvasKind }) : s,
+                      )
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="post">Post (1:1)</SelectItem>
+                      <SelectItem value="story">Story (9:16)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSpec((s) => (s ? cycleBackgroundVariant(s) : s))}
+                >
+                  <Sparkles className="mr-2 h-4 w-4" /> Background variant
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => setSpec((s) => (s ? resetLayout(s) : s))}>
+                  <RotateCcw className="mr-2 h-4 w-4" /> Reset layout
+                </Button>
               </div>
             </div>
-            <div className="space-y-1.5">
-              <Label>Headline</Label>
-              <Input value={headline} onChange={(e) => setHeadline(e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Offer badge</Label>
-              <Input value={sub} onChange={(e) => setSub(e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Call to action</Label>
-              <Input value={cta} onChange={(e) => setCta(e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Logo placement</Label>
-              <div className="grid grid-cols-2 gap-2">
-                {POS.map((p) => (
-                  <button
-                    key={p}
-                    onClick={() => setPos(p)}
-                    className={cn(
-                      "rounded-lg border px-2 py-1.5 text-xs capitalize",
-                      pos === p && "border-primary bg-accent text-accent-foreground",
-                    )}
-                  >
-                    {p.replace("-", " ")}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </Panel>
+          </Panel>
+        </div>
       </div>
+
+      <SendToRetailersDialog
+        open={sendOpen}
+        onOpenChange={setSendOpen}
+        targets={sendTargets.data ?? []}
+        recipients={recipients.data ?? []}
+        loading={sendTargets.isLoading}
+        submitting={createAndSend.isPending}
+        onSubmit={(retailerIds) => {
+          void run("Sent to your retailers", () =>
+            createAndSend.mutateAsync({ draft: draft(), retailerIds }).then(() => setSendOpen(false)),
+          );
+        }}
+      />
     </>
   );
 }

@@ -15,6 +15,8 @@ export function ProfileSettings() {
     business: "",
     category: "",
     phone: "",
+    address: "",
+    businessEmail: "",
   });
   const [logo, setLogo] = useState<File | null>(null);
   const [photo, setPhoto] = useState<File | null>(null);
@@ -31,6 +33,8 @@ export function ProfileSettings() {
       business: activeProfile.business_name,
       category: activeProfile.category,
       phone: activeProfile.contact_number,
+      address: activeProfile.address ?? "",
+      businessEmail: activeProfile.business_email ?? "",
     });
     setLogo(null);
     setPhoto(null);
@@ -49,11 +53,14 @@ export function ProfileSettings() {
       setError("Your authenticated profile is unavailable. Sign in again and retry.");
       return;
     }
+    const required = [fields.name, fields.country, fields.state, fields.city, fields.business, fields.category, fields.phone];
     if (
-      Object.values(fields).some((value) => !value.trim()) ||
-      !/^\+?[0-9() .-]{7,20}$/.test(fields.phone.trim())
+      required.some((value) => !value.trim()) ||
+      !/^\+?[0-9() .-]{7,20}$/.test(fields.phone.trim()) ||
+      (fields.businessEmail.trim() &&
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fields.businessEmail.trim()))
     ) {
-      setError("Complete all required fields and enter a valid contact number.");
+      setError("Complete all required fields, enter a valid contact number and business email.");
       return;
     }
     const files = [logo, photo].filter((file): file is File => file !== null);
@@ -108,6 +115,8 @@ export function ProfileSettings() {
           profile_photo_path: nextPhoto,
           category: fields.category.trim(),
           contact_number: fields.phone.trim(),
+          address: fields.address.trim() || null,
+          business_email: fields.businessEmail.trim() || null,
         })
         .eq("user_id", verified.user.id)
         .eq("role", activeRole)
@@ -243,6 +252,34 @@ export function ProfileSettings() {
                   </label>
                 ),
               )}
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="block text-sm font-medium">
+                Shop address
+                <input
+                  type="text"
+                  value={fields.address}
+                  onChange={(event) => updateField("address", event.target.value)}
+                  placeholder="Printed on creatives retailers download"
+                  className="mt-1.5 block w-full rounded-lg border border-input bg-background px-3 py-2.5 outline-none focus:border-primary"
+                />
+                <span className="mt-1 block text-xs text-muted-foreground">
+                  Optional · shown on retailer templates
+                </span>
+              </label>
+              <label className="block text-sm font-medium">
+                Business email
+                <input
+                  type="email"
+                  value={fields.businessEmail}
+                  onChange={(event) => updateField("businessEmail", event.target.value)}
+                  placeholder="e.g. sales@yourbusiness.in"
+                  className="mt-1.5 block w-full rounded-lg border border-input bg-background px-3 py-2.5 outline-none focus:border-primary"
+                />
+                <span className="mt-1 block text-xs text-muted-foreground">
+                  Optional · defaults to your account email on creatives
+                </span>
+              </label>
             </div>
             <p className="text-sm text-muted-foreground">
               Account email: {authUser?.email ?? user.email}. Terms acceptance is retained from

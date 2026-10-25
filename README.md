@@ -134,3 +134,48 @@ npm run preview
 ```
 
 The build uses the Nitro Cloudflare preset and writes its worker entry to `.output/server/index.mjs`. The preview script runs Wrangler against `.output`; do not use `vite preview`, which expects a different `dist/server/server.js` entry and returns HTTP 500 for this build.
+
+## Templates system (rebuilt)
+
+The Templates / creatives feature is generated programmatically — there are no
+stock template images. One deterministic engine is the single source of truth for
+the manufacturer's picker, the editor, the retailer's preview and the exported PNG.
+
+### How it works
+- **Engine** (`src/lib/templateEngine/`): a template is a pure JSON `TemplateSpec`
+  (`types.ts`) rendered to responsive SVG (`render.ts`) and rasterised to PNG
+  client-side (`export.ts`). `layouts.ts` × `palettes.ts` × per-category motifs are
+  combined by `generator.ts` to produce **30 visually distinct designs** per
+  category (10 layouts × 3 palettes). `catalog.ts` holds the festival / season
+  metadata with 2026-27 dates and orders the grid by soonest upcoming.
+- **Placeholders** (`fit.ts`): every template carries manufacturer blocks
+  (business name, logo, phone, business email) and retailer blocks (business name,
+  logo, phone, email, address). They auto-fill from the signed-in profiles
+  (`brandFromProfile`), long text shrinks/wraps to fit, optional empty blocks
+  collapse, and everything stays inside the canvas safe area.
+- **Editing**: manufacturers drag/resize any placeholder and tweak copy, colour,
+  background variant and canvas size (`edit.ts`, `PlaceholderEditor.tsx`); those
+  positions are saved with the template. A retailer can only nudge **their own**
+  blocks before download (`TemplateViewer.tsx`).
+- **Data layer** (`src/lib/designerTemplates.ts` + `templateQueries.ts`): all
+  multi-table actions run as atomic `SECURITY DEFINER` RPCs — save, save-then-send,
+  save-then-publish, bulk send, mark-seen, record-download. Reads are gated by RLS
+  so a retailer only sees templates that were sent to them or published by a
+  manufacturer they are **actively** linked to; unlinking a retailer cuts access
+  immediately. TanStack Query invalidation refreshes both feeds after a write.
+
+### Adding a festival or season
+1. Add one entry to `CATEGORIES` in `src/lib/templateEngine/catalog.ts` — pick a
+   `key`, `label`, `kind` (`"festival"` or `"season"`), the next `date`
+   (`yyyy-mm-dd`), an `emblem` + `motifs` (see `MotifId` in `types.ts`), 3+
+   existing `paletteIds` (`palettes.ts`) and a `copy` bank.
+2. Mirror the same row in the `template_categories` seed block of
+   `supabase/migrations/202610250001_rebuilt_template_system.sql` (the save RPC
+   validates `category_key` against that table). Ship it as a **new forward
+   migration**, never by editing an applied version.
+3. The grid, the 30-design picker and the editor pick the new category up
+   automatically — no per-template artwork required.
+
+> Note: the migration in `supabase/migrations/` must be applied to the Supabase
+> project (`kwmakeexlzjdhjtkefvh`) for the templates UI to read/write live data.
+

@@ -20,6 +20,7 @@ import { Route as ManufacturerBrandRouteImport } from './routes/manufacturer.bra
 import { Route as ManufacturerCampaignsRouteImport } from './routes/manufacturer.campaigns'
 import { Route as ManufacturerEditorRouteImport } from './routes/manufacturer.editor'
 import { Route as ManufacturerRetailersRouteImport } from './routes/manufacturer.retailers'
+import { Route as ManufacturerSavedRouteImport } from './routes/manufacturer.saved'
 import { Route as ManufacturerSettingsRouteImport } from './routes/manufacturer.settings'
 import { Route as ManufacturerTemplatesRouteImport } from './routes/manufacturer.templates'
 import { Route as RetailerIndexRouteImport } from './routes/retailer.index'
@@ -86,6 +87,11 @@ const ManufacturerRetailersRoute = ManufacturerRetailersRouteImport.update({
   path: '/retailers',
   getParentRoute: () => ManufacturerRoute,
 } as any)
+const ManufacturerSavedRoute = ManufacturerSavedRouteImport.update({
+  id: '/saved',
+  path: '/saved',
+  getParentRoute: () => ManufacturerRoute,
+} as any)
 const ManufacturerSettingsRoute = ManufacturerSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -148,6 +154,7 @@ export interface FileRoutesByFullPath {
   '/manufacturer/campaigns': typeof ManufacturerCampaignsRoute
   '/manufacturer/editor': typeof ManufacturerEditorRoute
   '/manufacturer/retailers': typeof ManufacturerRetailersRoute
+  '/manufacturer/saved': typeof ManufacturerSavedRoute
   '/manufacturer/settings': typeof ManufacturerSettingsRoute
   '/manufacturer/templates': typeof ManufacturerTemplatesRoute
   '/retailer/brand-kit': typeof RetailerBrandKitRoute
@@ -169,6 +176,7 @@ export interface FileRoutesByTo {
   '/manufacturer/campaigns': typeof ManufacturerCampaignsRoute
   '/manufacturer/editor': typeof ManufacturerEditorRoute
   '/manufacturer/retailers': typeof ManufacturerRetailersRoute
+  '/manufacturer/saved': typeof ManufacturerSavedRoute
   '/manufacturer/settings': typeof ManufacturerSettingsRoute
   '/manufacturer/templates': typeof ManufacturerTemplatesRoute
   '/retailer/brand-kit': typeof RetailerBrandKitRoute
@@ -193,6 +201,7 @@ export interface FileRoutesById {
   '/manufacturer/campaigns': typeof ManufacturerCampaignsRoute
   '/manufacturer/editor': typeof ManufacturerEditorRoute
   '/manufacturer/retailers': typeof ManufacturerRetailersRoute
+  '/manufacturer/saved': typeof ManufacturerSavedRoute
   '/manufacturer/settings': typeof ManufacturerSettingsRoute
   '/manufacturer/templates': typeof ManufacturerTemplatesRoute
   '/retailer/brand-kit': typeof RetailerBrandKitRoute
@@ -218,6 +227,7 @@ export interface FileRouteTypes {
     | '/manufacturer/campaigns'
     | '/manufacturer/editor'
     | '/manufacturer/retailers'
+    | '/manufacturer/saved'
     | '/manufacturer/settings'
     | '/manufacturer/templates'
     | '/retailer/brand-kit'
@@ -239,6 +249,7 @@ export interface FileRouteTypes {
     | '/manufacturer/campaigns'
     | '/manufacturer/editor'
     | '/manufacturer/retailers'
+    | '/manufacturer/saved'
     | '/manufacturer/settings'
     | '/manufacturer/templates'
     | '/retailer/brand-kit'
@@ -262,6 +273,7 @@ export interface FileRouteTypes {
     | '/manufacturer/campaigns'
     | '/manufacturer/editor'
     | '/manufacturer/retailers'
+    | '/manufacturer/saved'
     | '/manufacturer/settings'
     | '/manufacturer/templates'
     | '/retailer/brand-kit'
@@ -362,6 +374,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ManufacturerRetailersRouteImport
       parentRoute: typeof ManufacturerRoute
     }
+    '/manufacturer/saved': {
+      id: '/manufacturer/saved'
+      path: '/saved'
+      fullPath: '/manufacturer/saved'
+      preLoaderRoute: typeof ManufacturerSavedRouteImport
+      parentRoute: typeof ManufacturerRoute
+    }
     '/manufacturer/settings': {
       id: '/manufacturer/settings'
       path: '/settings'
@@ -441,6 +460,7 @@ interface ManufacturerRouteChildren {
   ManufacturerCampaignsRoute: typeof ManufacturerCampaignsRoute
   ManufacturerEditorRoute: typeof ManufacturerEditorRoute
   ManufacturerRetailersRoute: typeof ManufacturerRetailersRoute
+  ManufacturerSavedRoute: typeof ManufacturerSavedRoute
   ManufacturerSettingsRoute: typeof ManufacturerSettingsRoute
   ManufacturerTemplatesRoute: typeof ManufacturerTemplatesRoute
   ManufacturerIndexRoute: typeof ManufacturerIndexRoute
@@ -452,6 +472,7 @@ const ManufacturerRouteChildren: ManufacturerRouteChildren = {
   ManufacturerCampaignsRoute: ManufacturerCampaignsRoute,
   ManufacturerEditorRoute: ManufacturerEditorRoute,
   ManufacturerRetailersRoute: ManufacturerRetailersRoute,
+  ManufacturerSavedRoute: ManufacturerSavedRoute,
   ManufacturerSettingsRoute: ManufacturerSettingsRoute,
   ManufacturerTemplatesRoute: ManufacturerTemplatesRoute,
   ManufacturerIndexRoute: ManufacturerIndexRoute,

@@ -18,6 +18,8 @@ export interface UserProfile {
   profile_photo_path: string;
   category: string;
   contact_number: string;
+  address?: string;
+  business_email?: string;
   accepted_policies: boolean;
   terms_accepted_at: string;
   created_at: string;
@@ -42,7 +44,7 @@ export const ROLE_LABEL: Record<Role, string> = {
 };
 const SESSION_KEY = "pp-role-preference";
 const PROFILE_COLUMNS =
-  "user_id, role, full_name, email, country, state, city, business_name, business_logo_path, profile_photo_path, category, contact_number, accepted_policies, terms_accepted_at, created_at";
+  "user_id, role, full_name, email, country, state, city, business_name, business_logo_path, profile_photo_path, category, contact_number, address, business_email, accepted_policies, terms_accepted_at, created_at";
 
 /** Returns only a role present in the authenticated user's profile set. */
 export function resolveRole(roles: Role[], requested?: Role | null): Role | null {

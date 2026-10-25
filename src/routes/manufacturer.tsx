@@ -8,6 +8,7 @@ import {
   PenSquare,
   Settings,
   Users,
+  Bookmark,
 } from "lucide-react";
 import { AppShell, type NavItem } from "@/components/AppShell";
 
@@ -15,6 +16,7 @@ const items: NavItem[] = [
   { label: "Overview", to: "/manufacturer", icon: LayoutDashboard, exact: true },
   { label: "Brand Kit", to: "/manufacturer/brand", icon: Palette },
   { label: "Templates", to: "/manufacturer/templates", icon: LayoutTemplate },
+  { label: "Saved Templates", to: "/manufacturer/saved", icon: Bookmark },
   { label: "Template Editor", to: "/manufacturer/editor", icon: PenSquare },
   { label: "Campaigns", to: "/manufacturer/campaigns", icon: CalendarDays },
   { label: "Retailers", to: "/manufacturer/retailers", icon: Users },
