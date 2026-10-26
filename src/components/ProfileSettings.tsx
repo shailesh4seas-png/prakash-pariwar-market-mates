@@ -1,6 +1,7 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import { PageHeader } from "@/components/AppShell";
 import { Panel } from "@/components/shared";
+import { ThemePreferencePicker } from "@/components/ThemeToggle";
 import { ROLE_LABEL, useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -53,7 +54,15 @@ export function ProfileSettings() {
       setError("Your authenticated profile is unavailable. Sign in again and retry.");
       return;
     }
-    const required = [fields.name, fields.country, fields.state, fields.city, fields.business, fields.category, fields.phone];
+    const required = [
+      fields.name,
+      fields.country,
+      fields.state,
+      fields.city,
+      fields.business,
+      fields.category,
+      fields.phone,
+    ];
     if (
       required.some((value) => !value.trim()) ||
       !/^\+?[0-9() .-]{7,20}$/.test(fields.phone.trim()) ||
@@ -164,6 +173,13 @@ export function ProfileSettings() {
         title="Profile"
         desc="Business details associated with your authenticated account."
       />
+      <Panel title="Appearance" className="mb-6">
+        <p className="mb-4 text-sm text-muted-foreground">
+          Choose Light, Dark, or System. System follows your device setting and updates live; your
+          choice is remembered on this device.
+        </p>
+        <ThemePreferencePicker />
+      </Panel>
       <Panel>
         <div className="flex items-center gap-4">
           {activeProfile?.profilePhotoUrl ? (

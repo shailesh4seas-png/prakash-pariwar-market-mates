@@ -14,6 +14,7 @@ import {
 import heroDiwali from "@/assets/hero-diwali.jpg";
 import { Logo } from "@/components/Logo";
 import { TemplatePoster } from "@/components/TemplateCard";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { TEMPLATES } from "@/lib/data";
 import { startGoogleSignIn } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -69,6 +70,10 @@ function Landing() {
             ))}
           </nav>
           <div className="flex items-center gap-2">
+            <ThemeToggle
+              label="Theme"
+              className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            />
             <Link
               to="/login"
               className="hidden rounded-xl px-4 py-2 text-sm font-semibold text-sidebar-accent-foreground hover:bg-sidebar-accent sm:block"
