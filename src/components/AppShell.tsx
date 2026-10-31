@@ -132,8 +132,8 @@ export function AppShell({
             role="status"
             className="mb-5 rounded-lg border border-gold/40 bg-gold/10 px-4 py-3 text-sm text-foreground"
           >
-            Templates, sharing, publishing and creative downloads are live and saved to your
-            business account. Campaigns and analytics still use sample data.
+            Templates, product catalogs, sharing, publishing and creative downloads are live and
+            saved to your business account. Campaigns and analytics still use sample data.
           </p>
           {children}
         </main>

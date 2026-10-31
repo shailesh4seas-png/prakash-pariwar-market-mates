@@ -6,7 +6,7 @@ import {
   Images,
   LayoutTemplate,
   Megaphone,
-  Palette,
+  Package,
   User,
 } from "lucide-react";
 import { AppShell, type NavItem } from "@/components/AppShell";
@@ -17,7 +17,7 @@ const items: NavItem[] = [
   { label: "My Creatives", to: "/retailer/creatives", icon: Images },
   { label: "Campaigns", to: "/retailer/campaigns", icon: Megaphone },
   { label: "Calendar", to: "/retailer/calendar", icon: Calendar },
-  { label: "Brand Kit", to: "/retailer/brand-kit", icon: Palette },
+  { label: "Product Catalog", to: "/retailer/catalog", icon: Package },
   { label: "Profile", to: "/retailer/profile", icon: User },
   { label: "Help & Support", to: "/retailer/help", icon: CircleHelp },
 ];

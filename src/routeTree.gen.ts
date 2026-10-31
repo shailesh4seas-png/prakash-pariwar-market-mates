@@ -16,17 +16,17 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as RetailerRouteImport } from './routes/retailer'
 import { Route as ManufacturerIndexRouteImport } from './routes/manufacturer.index'
 import { Route as ManufacturerAnalyticsRouteImport } from './routes/manufacturer.analytics'
-import { Route as ManufacturerBrandRouteImport } from './routes/manufacturer.brand'
 import { Route as ManufacturerCampaignsRouteImport } from './routes/manufacturer.campaigns'
+import { Route as ManufacturerCatalogRouteImport } from './routes/manufacturer.catalog'
 import { Route as ManufacturerEditorRouteImport } from './routes/manufacturer.editor'
 import { Route as ManufacturerRetailersRouteImport } from './routes/manufacturer.retailers'
 import { Route as ManufacturerSavedRouteImport } from './routes/manufacturer.saved'
 import { Route as ManufacturerSettingsRouteImport } from './routes/manufacturer.settings'
 import { Route as ManufacturerTemplatesRouteImport } from './routes/manufacturer.templates'
 import { Route as RetailerIndexRouteImport } from './routes/retailer.index'
-import { Route as RetailerBrandKitRouteImport } from './routes/retailer.brand-kit'
 import { Route as RetailerCalendarRouteImport } from './routes/retailer.calendar'
 import { Route as RetailerCampaignsRouteImport } from './routes/retailer.campaigns'
+import { Route as RetailerCatalogRouteImport } from './routes/retailer.catalog'
 import { Route as RetailerCreativesRouteImport } from './routes/retailer.creatives'
 import { Route as RetailerHelpRouteImport } from './routes/retailer.help'
 import { Route as RetailerProfileRouteImport } from './routes/retailer.profile'
@@ -67,14 +67,14 @@ const ManufacturerAnalyticsRoute = ManufacturerAnalyticsRouteImport.update({
   path: '/analytics',
   getParentRoute: () => ManufacturerRoute,
 } as any)
-const ManufacturerBrandRoute = ManufacturerBrandRouteImport.update({
-  id: '/brand',
-  path: '/brand',
-  getParentRoute: () => ManufacturerRoute,
-} as any)
 const ManufacturerCampaignsRoute = ManufacturerCampaignsRouteImport.update({
   id: '/campaigns',
   path: '/campaigns',
+  getParentRoute: () => ManufacturerRoute,
+} as any)
+const ManufacturerCatalogRoute = ManufacturerCatalogRouteImport.update({
+  id: '/catalog',
+  path: '/catalog',
   getParentRoute: () => ManufacturerRoute,
 } as any)
 const ManufacturerEditorRoute = ManufacturerEditorRouteImport.update({
@@ -107,11 +107,6 @@ const RetailerIndexRoute = RetailerIndexRouteImport.update({
   path: '/',
   getParentRoute: () => RetailerRoute,
 } as any)
-const RetailerBrandKitRoute = RetailerBrandKitRouteImport.update({
-  id: '/brand-kit',
-  path: '/brand-kit',
-  getParentRoute: () => RetailerRoute,
-} as any)
 const RetailerCalendarRoute = RetailerCalendarRouteImport.update({
   id: '/calendar',
   path: '/calendar',
@@ -120,6 +115,11 @@ const RetailerCalendarRoute = RetailerCalendarRouteImport.update({
 const RetailerCampaignsRoute = RetailerCampaignsRouteImport.update({
   id: '/campaigns',
   path: '/campaigns',
+  getParentRoute: () => RetailerRoute,
+} as any)
+const RetailerCatalogRoute = RetailerCatalogRouteImport.update({
+  id: '/catalog',
+  path: '/catalog',
   getParentRoute: () => RetailerRoute,
 } as any)
 const RetailerCreativesRoute = RetailerCreativesRouteImport.update({
@@ -150,16 +150,16 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/retailer': typeof RetailerRouteWithChildren
   '/manufacturer/analytics': typeof ManufacturerAnalyticsRoute
-  '/manufacturer/brand': typeof ManufacturerBrandRoute
   '/manufacturer/campaigns': typeof ManufacturerCampaignsRoute
+  '/manufacturer/catalog': typeof ManufacturerCatalogRoute
   '/manufacturer/editor': typeof ManufacturerEditorRoute
   '/manufacturer/retailers': typeof ManufacturerRetailersRoute
   '/manufacturer/saved': typeof ManufacturerSavedRoute
   '/manufacturer/settings': typeof ManufacturerSettingsRoute
   '/manufacturer/templates': typeof ManufacturerTemplatesRoute
-  '/retailer/brand-kit': typeof RetailerBrandKitRoute
   '/retailer/calendar': typeof RetailerCalendarRoute
   '/retailer/campaigns': typeof RetailerCampaignsRoute
+  '/retailer/catalog': typeof RetailerCatalogRoute
   '/retailer/creatives': typeof RetailerCreativesRoute
   '/retailer/help': typeof RetailerHelpRoute
   '/retailer/profile': typeof RetailerProfileRoute
@@ -172,16 +172,16 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/manufacturer/analytics': typeof ManufacturerAnalyticsRoute
-  '/manufacturer/brand': typeof ManufacturerBrandRoute
   '/manufacturer/campaigns': typeof ManufacturerCampaignsRoute
+  '/manufacturer/catalog': typeof ManufacturerCatalogRoute
   '/manufacturer/editor': typeof ManufacturerEditorRoute
   '/manufacturer/retailers': typeof ManufacturerRetailersRoute
   '/manufacturer/saved': typeof ManufacturerSavedRoute
   '/manufacturer/settings': typeof ManufacturerSettingsRoute
   '/manufacturer/templates': typeof ManufacturerTemplatesRoute
-  '/retailer/brand-kit': typeof RetailerBrandKitRoute
   '/retailer/calendar': typeof RetailerCalendarRoute
   '/retailer/campaigns': typeof RetailerCampaignsRoute
+  '/retailer/catalog': typeof RetailerCatalogRoute
   '/retailer/creatives': typeof RetailerCreativesRoute
   '/retailer/help': typeof RetailerHelpRoute
   '/retailer/profile': typeof RetailerProfileRoute
@@ -197,16 +197,16 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/retailer': typeof RetailerRouteWithChildren
   '/manufacturer/analytics': typeof ManufacturerAnalyticsRoute
-  '/manufacturer/brand': typeof ManufacturerBrandRoute
   '/manufacturer/campaigns': typeof ManufacturerCampaignsRoute
+  '/manufacturer/catalog': typeof ManufacturerCatalogRoute
   '/manufacturer/editor': typeof ManufacturerEditorRoute
   '/manufacturer/retailers': typeof ManufacturerRetailersRoute
   '/manufacturer/saved': typeof ManufacturerSavedRoute
   '/manufacturer/settings': typeof ManufacturerSettingsRoute
   '/manufacturer/templates': typeof ManufacturerTemplatesRoute
-  '/retailer/brand-kit': typeof RetailerBrandKitRoute
   '/retailer/calendar': typeof RetailerCalendarRoute
   '/retailer/campaigns': typeof RetailerCampaignsRoute
+  '/retailer/catalog': typeof RetailerCatalogRoute
   '/retailer/creatives': typeof RetailerCreativesRoute
   '/retailer/help': typeof RetailerHelpRoute
   '/retailer/profile': typeof RetailerProfileRoute
@@ -223,16 +223,16 @@ export interface FileRouteTypes {
     | '/register'
     | '/retailer'
     | '/manufacturer/analytics'
-    | '/manufacturer/brand'
     | '/manufacturer/campaigns'
+    | '/manufacturer/catalog'
     | '/manufacturer/editor'
     | '/manufacturer/retailers'
     | '/manufacturer/saved'
     | '/manufacturer/settings'
     | '/manufacturer/templates'
-    | '/retailer/brand-kit'
     | '/retailer/calendar'
     | '/retailer/campaigns'
+    | '/retailer/catalog'
     | '/retailer/creatives'
     | '/retailer/help'
     | '/retailer/profile'
@@ -245,16 +245,16 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/manufacturer/analytics'
-    | '/manufacturer/brand'
     | '/manufacturer/campaigns'
+    | '/manufacturer/catalog'
     | '/manufacturer/editor'
     | '/manufacturer/retailers'
     | '/manufacturer/saved'
     | '/manufacturer/settings'
     | '/manufacturer/templates'
-    | '/retailer/brand-kit'
     | '/retailer/calendar'
     | '/retailer/campaigns'
+    | '/retailer/catalog'
     | '/retailer/creatives'
     | '/retailer/help'
     | '/retailer/profile'
@@ -269,16 +269,16 @@ export interface FileRouteTypes {
     | '/register'
     | '/retailer'
     | '/manufacturer/analytics'
-    | '/manufacturer/brand'
     | '/manufacturer/campaigns'
+    | '/manufacturer/catalog'
     | '/manufacturer/editor'
     | '/manufacturer/retailers'
     | '/manufacturer/saved'
     | '/manufacturer/settings'
     | '/manufacturer/templates'
-    | '/retailer/brand-kit'
     | '/retailer/calendar'
     | '/retailer/campaigns'
+    | '/retailer/catalog'
     | '/retailer/creatives'
     | '/retailer/help'
     | '/retailer/profile'
@@ -346,18 +346,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ManufacturerAnalyticsRouteImport
       parentRoute: typeof ManufacturerRoute
     }
-    '/manufacturer/brand': {
-      id: '/manufacturer/brand'
-      path: '/brand'
-      fullPath: '/manufacturer/brand'
-      preLoaderRoute: typeof ManufacturerBrandRouteImport
-      parentRoute: typeof ManufacturerRoute
-    }
     '/manufacturer/campaigns': {
       id: '/manufacturer/campaigns'
       path: '/campaigns'
       fullPath: '/manufacturer/campaigns'
       preLoaderRoute: typeof ManufacturerCampaignsRouteImport
+      parentRoute: typeof ManufacturerRoute
+    }
+    '/manufacturer/catalog': {
+      id: '/manufacturer/catalog'
+      path: '/catalog'
+      fullPath: '/manufacturer/catalog'
+      preLoaderRoute: typeof ManufacturerCatalogRouteImport
       parentRoute: typeof ManufacturerRoute
     }
     '/manufacturer/editor': {
@@ -402,13 +402,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RetailerIndexRouteImport
       parentRoute: typeof RetailerRoute
     }
-    '/retailer/brand-kit': {
-      id: '/retailer/brand-kit'
-      path: '/brand-kit'
-      fullPath: '/retailer/brand-kit'
-      preLoaderRoute: typeof RetailerBrandKitRouteImport
-      parentRoute: typeof RetailerRoute
-    }
     '/retailer/calendar': {
       id: '/retailer/calendar'
       path: '/calendar'
@@ -421,6 +414,13 @@ declare module '@tanstack/react-router' {
       path: '/campaigns'
       fullPath: '/retailer/campaigns'
       preLoaderRoute: typeof RetailerCampaignsRouteImport
+      parentRoute: typeof RetailerRoute
+    }
+    '/retailer/catalog': {
+      id: '/retailer/catalog'
+      path: '/catalog'
+      fullPath: '/retailer/catalog'
+      preLoaderRoute: typeof RetailerCatalogRouteImport
       parentRoute: typeof RetailerRoute
     }
     '/retailer/creatives': {
@@ -456,8 +456,8 @@ declare module '@tanstack/react-router' {
 
 interface ManufacturerRouteChildren {
   ManufacturerAnalyticsRoute: typeof ManufacturerAnalyticsRoute
-  ManufacturerBrandRoute: typeof ManufacturerBrandRoute
   ManufacturerCampaignsRoute: typeof ManufacturerCampaignsRoute
+  ManufacturerCatalogRoute: typeof ManufacturerCatalogRoute
   ManufacturerEditorRoute: typeof ManufacturerEditorRoute
   ManufacturerRetailersRoute: typeof ManufacturerRetailersRoute
   ManufacturerSavedRoute: typeof ManufacturerSavedRoute
@@ -468,8 +468,8 @@ interface ManufacturerRouteChildren {
 
 const ManufacturerRouteChildren: ManufacturerRouteChildren = {
   ManufacturerAnalyticsRoute: ManufacturerAnalyticsRoute,
-  ManufacturerBrandRoute: ManufacturerBrandRoute,
   ManufacturerCampaignsRoute: ManufacturerCampaignsRoute,
+  ManufacturerCatalogRoute: ManufacturerCatalogRoute,
   ManufacturerEditorRoute: ManufacturerEditorRoute,
   ManufacturerRetailersRoute: ManufacturerRetailersRoute,
   ManufacturerSavedRoute: ManufacturerSavedRoute,
@@ -483,9 +483,9 @@ const ManufacturerRouteWithChildren = ManufacturerRoute._addFileChildren(
 )
 
 interface RetailerRouteChildren {
-  RetailerBrandKitRoute: typeof RetailerBrandKitRoute
   RetailerCalendarRoute: typeof RetailerCalendarRoute
   RetailerCampaignsRoute: typeof RetailerCampaignsRoute
+  RetailerCatalogRoute: typeof RetailerCatalogRoute
   RetailerCreativesRoute: typeof RetailerCreativesRoute
   RetailerHelpRoute: typeof RetailerHelpRoute
   RetailerProfileRoute: typeof RetailerProfileRoute
@@ -494,9 +494,9 @@ interface RetailerRouteChildren {
 }
 
 const RetailerRouteChildren: RetailerRouteChildren = {
-  RetailerBrandKitRoute: RetailerBrandKitRoute,
   RetailerCalendarRoute: RetailerCalendarRoute,
   RetailerCampaignsRoute: RetailerCampaignsRoute,
+  RetailerCatalogRoute: RetailerCatalogRoute,
   RetailerCreativesRoute: RetailerCreativesRoute,
   RetailerHelpRoute: RetailerHelpRoute,
   RetailerProfileRoute: RetailerProfileRoute,

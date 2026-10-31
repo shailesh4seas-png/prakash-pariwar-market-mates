@@ -68,7 +68,7 @@ Create a template-discovery and marketing-content home page inspired by the refe
 
 ### Header & Sidebar
 - Prakash Pariwar logo with flame/lotus badge.
-- Sidebar with Home, Templates, My Creatives, Campaigns, Calendar, Brand Kit, Profile, Help & Support.
+- Sidebar with Home, Templates, My Creatives, Campaigns, Calendar, Product Catalog, Profile, Help & Support.
 - Bottom sidebar promo card: "Create Engage Grow - Branded content made easy for your business."
 - Top bar with global template/festival search, notifications, profile with role switch dropdown ("Sharma Electronics - Retailer").
 
@@ -88,7 +88,7 @@ The Manufacturer dashboard should provide tools to manage the manufacturer's bra
 
 ### Main Navigation & Sections
 1. **Overview / Dashboard**: Key metrics (total templates, published templates, draft templates, total retailers, pending invitations), recent activity, campaign summaries, upcoming scheduled content.
-2. **Brand Profile / Brand Kit**: Brand name, logo upload preview, brand colors, fonts, contact details, brand identity guidelines.
+2. **Product Catalog** (replaced the former Brand Kit screen): add, search, edit and delete products; each product carries a name, a manufacturer-unique code plus optional SKU/model number, up to 12 reorderable photos with one cover, an INR price, a category, a description, free-form key/value specifications, a warranty and an in-stock flag. Retailers see the same catalog read-only. Backed by `supabase/migrations/202610310001_product_catalog.sql`.
 3. **Templates Management**: Listing/grid with search, status filters (draft, published, archived), create/edit/preview controls.
 4. **Template Editor**: Clean editing UI with template preview, title, category, media/content, text and CTA fields, logo placement, and save/publish actions.
 5. **Campaigns & Content Calendar**: Campaign listings, schedule dates, visual calendar view for planned festive and product launches.
