@@ -12,6 +12,9 @@ import { useEffect, type ReactNode } from "react";
 
 import { Toaster } from "@/components/ui/sonner";
 import { SessionProvider } from "@/lib/session";
+import { ThemeProvider } from "@/lib/theme";
+import { getServerResolvedTheme } from "@/lib/theme-server";
+import { themeInitScript } from "@/lib/theme-context";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
@@ -107,9 +110,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: ReactNode }) {
+  // Server: read from the mirrored cookie. Client (SPA navigations): reuse the
+  // class the pre-paint script applied, so hydration never mismatches.
+  const theme = getServerResolvedTheme();
   return (
-    <html lang="en">
+    <html lang="en" className={theme === "dark" ? "dark" : undefined}>
       <head>
+        {/* Runs before first paint so there is no light/dark flash on load. */}
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <HeadContent />
       </head>
       <body>
@@ -126,10 +134,12 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <SessionProvider>
-        <Outlet />
-        <Toaster richColors position="top-right" />
-      </SessionProvider>
+      <ThemeProvider>
+        <SessionProvider>
+          <Outlet />
+          <Toaster richColors position="top-right" />
+        </SessionProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

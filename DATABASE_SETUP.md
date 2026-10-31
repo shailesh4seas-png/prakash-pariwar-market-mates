@@ -181,6 +181,50 @@ drop policy if exists "Users can update their own profiles" on public.user_profi
 
 This leaves all profile rows, buckets, RLS settings, and other policies intact. It disables profile-row editing; it does not undo registration, image replacement, or delete uploaded files.
 
+## Product Catalog migration
+
+`supabase/migrations/202610310001_product_catalog.sql` replaces the mock Brand Kit screens with a real product catalog backend. It is a forward migration only: it changes no profile, association, invitation or template table, and it does not touch the `profile-assets` or `template-assets` buckets.
+
+It creates:
+
+- `public.product_categories` — one row per manufacturer-visible category, unique on `(manufacturer_user_id, lower(name))`.
+- `public.products` — one owner-scoped row per product with `name`, `code`, optional `sku` / `model_number`, `price numeric(12,2)`, `description`, `specifications jsonb`, `warranty`, `in_stock`, and `created_at` / `updated_at` (maintained by the existing `private.touch_updated_at()` trigger). The product code is unique **per manufacturer** on `(manufacturer_user_id, lower(code))`, and search indexes exist for name, code, SKU and model number.
+- `public.product_images` — ordered photos (`position`) with one `is_primary` cover, enforced by the deferrable `private.assert_single_primary_image()` constraint trigger so a cover swap inside one UPDATE stays valid. Paths are checked to be `<owner>/products/<file>` with an image extension.
+- RLS on all three tables: manufacturers manage their own rows (and only while the `manufacturer` role is present for the signed-in user in `public.user_profiles`); associated retailers get SELECT only — there is no retailer write policy — through the existing `private.is_associated_with()`.
+- The private `product-assets` bucket (5 MiB, PNG/JPEG/WebP) with owner-scoped insert/select/delete for manufacturers and, for retailers, a SELECT policy that resolves the object's product through `public.can_read_product_photo()`.
+- `SECURITY DEFINER` RPCs granted to `authenticated` only: `list_products`, `get_product_detail`, `list_product_categories`, `upsert_product`, `delete_product`, `add_product_image`, `delete_product_image`, `reorder_product_images`. Every write RPC re-checks the manufacturer role and ownership, and `delete_product` / `delete_product_image` delete the matching `storage.objects` rows in the same transaction, so a photo can never stay readable after its product is gone. (Whether the underlying bytes are then reclaimed by Supabase-side housekeeping is not verified — see the review note above `delete_product` in the migration.)
+- `public.products` and `public.product_images` are added to the `supabase_realtime` publication inside guarded blocks, so an already-published or unavailable publication cannot fail the migration.
+
+**Applied on 31 Oct 2026** to production project `kwmakeexlzjdhjtkefvh` via the Supabase Management API using a `shailesh4seas-png` owner token (`sbp_...`), then recorded in `supabase_migrations.schema_migrations` as version `202610310001`, name `product_catalog`. The migration is idempotent (`create ... if not exists`, `create or replace function`, `drop policy if exists`, guarded `alter publication`), so the same file can be re-run safely.
+
+### Post-apply verification (performed 31 Oct 2026)
+
+- Preflight: `private.is_associated_with(uuid)`, `private.touch_updated_at()` and the new `private.assert_single_primary_image()` are present; `product_categories`, `products`, `product_images` all show `relrowsecurity = true`; bucket `product-assets` exists as private, `file_size_limit = 5242880`, `allowed_mime_types = [image/png, image/jpeg, image/webp]`.
+- RPCs present with expected signatures and `prosecdef = true`, `search_path = ""`; execute granted to `authenticated` (and, for the public RPCs, `service_role`), revoked from `anon`. Table SELECT/INSERT/UPDATE/DELETE policies exist for manufacturers (owner + role check) and a SELECT-only policy for actively associated retailers, matching the migration file exactly.
+- Storage policies on `storage.objects`: manufacturer INSERT/SELECT/DELETE under `<uid>/products/...`, plus retailer SELECT gated by `public.can_read_product_photo(name)`.
+- Realtime: `supabase_realtime` publication lists `public.products` and `public.product_images`.
+- Behavioural probes through the Management API (each running as a fresh session with `set local role authenticated; set local request.jwt.claims = '{"sub":"..."}'`):
+  - Unknown `sub` calling `list_products` → `42501 Authentication required.` (RPC gate).
+  - Unknown `sub` calling `delete_product` / `add_product_image` → `42501 Manufacturer access is required.` (via `private.require_manufacturer_actor()`).
+  - Unknown `sub` calling `get_product_detail(<random uuid>)` → `P0002 Product not found or not visible to you.`
+  - `anon` selecting `public.products` → `42501 permission denied for table products` (RLS + no privilege).
+  - A real retailer-only `sub` calling `upsert_product` → `42501 Manufacturer access is required.` (proves the retailer read-only rule at the RPC boundary).
+  - A real retailer-only `sub` calling `list_products` → 0 rows (allowed, filtered by RLS/`is_associated_with`).
+  - A real manufacturer-only `sub` calling `list_products` and `list_product_categories` → 0 rows (empty catalog).
+  - Happy-path write: `begin; ... upsert_product(...); select ... from list_products; rollback;` succeeded and left `products`, `product_images`, `product_categories`, `storage.objects` at 0 rows afterwards.
+
+### Still to confirm with real browser accounts
+
+The catalog screens themselves (`manufacturer.catalog.tsx`, `retailer.catalog.tsx`) now hit real RPCs, but the following are still worth doing from a browser as separate manufacturer and retailer test users before shipping the frontend bundle:
+
+- Full manufacturer flow: create a product, upload 2+ photos to `product-assets`, set cover, reorder, edit, delete — the UI's optimistic cache invalidation and realtime `postgres_changes` subscription both fire.
+- Retailer association gate: a retailer who has never been invited must not see any product; after `manufacturer_retailer_associations` row exists (via the accepted invitation flow), the retailer's `list_products` / `get_product_detail` return the manufacturer's rows and their photo `SELECT` policy resolves through `can_read_product_photo`.
+- Revocation: setting `removed_at` on an association makes the retailer's next call return zero rows without any client change.
+
+### Rollback
+
+Additive-safe: `drop function`/`drop table` for the objects above plus `delete from storage.buckets where id = 'product-assets'`. No pre-existing table, function or policy was modified, so nothing else needs restoring. To also unrecord the migration, `delete from supabase_migrations.schema_migrations where version = '202610310001'`.
+
 ## OAuth redirect configuration
 
 The production Supabase **Site URL** should be `https://prakash-pariwar-market-mates.lovable.app`. Add `https://prakash-pariwar-market-mates.lovable.app/register` to **Redirect URLs**. The app sends the callback to `${window.location.origin}/register`, so also allow only the actual development origins used: Vite defaults to port `8080`; if it is occupied, Vite reports and uses the next available port (verified here with `8081`). Add `http://localhost:<actual-vite-port>/register` only for the local origin in use. Codespaces uses its exact forwarded browser origin ending in `/register`.

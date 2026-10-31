@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "r
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, ArrowRight, Check, ImagePlus, LoaderCircle } from "lucide-react";
 import { Logo } from "@/components/Logo";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   validateRegistration,
   type RegistrationErrors,
@@ -636,6 +637,9 @@ function Register() {
 function PageFrame({ children }: { children: React.ReactNode }) {
   return (
     <main className="min-h-screen bg-background px-4 py-8 sm:px-6 sm:py-12">
+      <div className="fixed right-4 top-4">
+        <ThemeToggle className="hover:bg-muted" />
+      </div>
       <div className="mx-auto max-w-6xl">
         <Link to="/" className="mb-9 inline-flex">
           <Logo />

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowRight, LoaderCircle } from "lucide-react";
 import { Logo } from "@/components/Logo";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useSession } from "@/lib/session";
 import { startGoogleSignIn } from "@/lib/supabase";
 
@@ -88,6 +89,9 @@ function Login() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-night px-4 py-10">
+      <div className="fixed right-4 top-4">
+        <ThemeToggle className="text-primary-foreground hover:bg-primary-foreground/10" />
+      </div>
       <div className="w-full max-w-lg">
         <Link to="/" className="mb-8 flex justify-center">
           <Logo />

@@ -3,6 +3,7 @@ import { Bell, Menu, Search, Sparkles, type LucideIcon } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { Logo } from "@/components/Logo";
 import { RoleMenu } from "@/components/RoleMenu";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { ROLE_LABEL, useSession, type Role } from "@/lib/session";
 import { cn } from "@/lib/utils";
@@ -26,7 +27,9 @@ function SidebarBody({ items, role, onNav }: { items: NavItem[]; role: Role; onN
       </span>
       <nav className="mt-6 space-y-1">
         {items.map((it) => {
-          const active = it.exact ? path === it.to : path === it.to || path.startsWith(String(it.to) + "/");
+          const active = it.exact
+            ? path === it.to
+            : path === it.to || path.startsWith(String(it.to) + "/");
           return (
             <Link
               key={it.to}
@@ -56,13 +59,23 @@ function SidebarBody({ items, role, onNav }: { items: NavItem[]; role: Role; onN
           </p>
           <Sparkles className="h-5 w-5 text-primary-glow" />
         </div>
-        <p className="mt-3 text-xs leading-relaxed text-sidebar-foreground">Branded content made easy for your business.</p>
+        <p className="mt-3 text-xs leading-relaxed text-sidebar-foreground">
+          Branded content made easy for your business.
+        </p>
       </div>
     </div>
   );
 }
 
-export function AppShell({ role, items, children }: { role: Role; items: NavItem[]; children: ReactNode }) {
+export function AppShell({
+  role,
+  items,
+  children,
+}: {
+  role: Role;
+  items: NavItem[];
+  children: ReactNode;
+}) {
   const { ready, user, activeRole } = useSession();
   const [open, setOpen] = useState(false);
 
@@ -87,17 +100,26 @@ export function AppShell({ role, items, children }: { role: Role; items: NavItem
       </Sheet>
       <div className="lg:pl-64">
         <header className="sticky top-0 z-20 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-b bg-card/90 px-4 py-3 backdrop-blur sm:px-6">
-          <button onClick={() => setOpen(true)} className="rounded-lg p-2 hover:bg-muted lg:hidden" aria-label="Open menu">
+          <button
+            onClick={() => setOpen(true)}
+            className="rounded-lg p-2 hover:bg-muted lg:hidden"
+            aria-label="Open menu"
+          >
             <Menu className="h-5 w-5" />
           </button>
           <div className="relative col-start-2 max-w-xl">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input
-              placeholder={role === "retailer" ? "Search templates, festivals, offers..." : "Search templates, campaigns, retailers..."}
+              placeholder={
+                role === "retailer"
+                  ? "Search templates, festivals, offers..."
+                  : "Search templates, campaigns, retailers..."
+              }
               className="w-full rounded-xl border bg-muted/60 py-2.5 pl-9 pr-3 text-sm outline-none focus:border-primary focus:bg-card"
             />
           </div>
           <div className="flex items-center gap-1 sm:gap-3">
+            <ThemeToggle className="hover:bg-muted" />
             <button className="relative rounded-full p-2 hover:bg-muted" aria-label="Notifications">
               <Bell className="h-5 w-5" />
               <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-destructive" />
@@ -110,8 +132,8 @@ export function AppShell({ role, items, children }: { role: Role; items: NavItem
             role="status"
             className="mb-5 rounded-lg border border-gold/40 bg-gold/10 px-4 py-3 text-sm text-foreground"
           >
-            Templates, sharing, publishing and creative downloads are live and saved to your
-            business account. Campaigns and analytics still use sample data.
+            Templates, product catalogs, sharing, publishing and creative downloads are live and
+            saved to your business account. Campaigns and analytics still use sample data.
           </p>
           {children}
         </main>
@@ -120,7 +142,15 @@ export function AppShell({ role, items, children }: { role: Role; items: NavItem
   );
 }
 
-export function PageHeader({ title, desc, action }: { title: string; desc?: string; action?: ReactNode }) {
+export function PageHeader({
+  title,
+  desc,
+  action,
+}: {
+  title: string;
+  desc?: string;
+  action?: ReactNode;
+}) {
   return (
     <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0">

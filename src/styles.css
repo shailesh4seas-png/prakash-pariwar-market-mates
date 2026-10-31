@@ -108,29 +108,72 @@
   --sidebar-border: oklch(0.27 0.04 265);
   --sidebar-ring: oklch(0.55 0.23 285);
   --gradient-primary: linear-gradient(135deg, var(--primary), var(--primary-glow));
-  --gradient-festive: linear-gradient(135deg, oklch(0.3 0.15 295), oklch(0.5 0.24 320) 60%, oklch(0.72 0.17 55));
+  --gradient-festive: linear-gradient(
+    135deg,
+    oklch(0.3 0.15 295),
+    oklch(0.5 0.24 320) 60%,
+    oklch(0.72 0.17 55)
+  );
   --gradient-night: linear-gradient(160deg, oklch(0.17 0.04 265), oklch(0.25 0.1 290));
   --shadow-card: 0 8px 24px -12px color-mix(in oklab, var(--foreground) 25%, transparent);
   --shadow-glow: 0 12px 32px -10px color-mix(in oklab, var(--primary) 55%, transparent);
 }
 
+/*
+ * Phone-style black dark mode: pure/near-black page, very dark grey surfaces,
+ * subtle grey borders, white/grey text. Brand purple and gold are brightened
+ * for contrast on black. All values use oklch with zero blue/navy chroma on
+ * neutral surfaces.
+ */
 .dark {
-  --background: oklch(0.17 0.04 265);
-  --foreground: oklch(0.97 0 0);
-  --card: oklch(0.22 0.04 265);
-  --card-foreground: oklch(0.97 0 0);
-  --popover: oklch(0.22 0.04 265);
-  --popover-foreground: oklch(0.97 0 0);
-  --primary: oklch(0.65 0.2 285);
+  color-scheme: dark;
+  --background: oklch(0 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.165 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.185 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.65 0.21 293);
   --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.27 0.04 265);
-  --secondary-foreground: oklch(0.97 0 0);
-  --muted: oklch(0.27 0.04 265);
-  --muted-foreground: oklch(0.7 0.03 265);
-  --accent: oklch(0.3 0.06 285);
-  --accent-foreground: oklch(0.97 0 0);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
+  --primary-glow: oklch(0.74 0.19 320);
+  --secondary: oklch(0.22 0 0);
+  --secondary-foreground: oklch(0.96 0 0);
+  --muted: oklch(0.215 0 0);
+  --muted-foreground: oklch(0.7 0 0);
+  --accent: oklch(0.25 0.035 293);
+  --accent-foreground: oklch(0.88 0.09 293);
+  --gold: oklch(0.82 0.145 80);
+  --gold-foreground: oklch(0.28 0.07 70);
+  --success: oklch(0.74 0.17 153);
+  --warning: oklch(0.82 0.145 80);
+  --destructive: oklch(0.68 0.19 25);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0.24 0 0);
+  --input: oklch(0.24 0 0);
+  --ring: oklch(0.65 0.21 293);
+  --chart-1: oklch(0.65 0.21 293);
+  --chart-2: oklch(0.82 0.145 80);
+  --chart-3: oklch(0.74 0.17 153);
+  --chart-4: oklch(0.7 0.17 20);
+  --chart-5: oklch(0.72 0.14 250);
+  --sidebar: oklch(0.145 0 0);
+  --sidebar-foreground: oklch(0.88 0 0);
+  --sidebar-primary: oklch(0.55 0.19 293);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.25 0 0);
+  --sidebar-accent-foreground: oklch(0.99 0 0);
+  --sidebar-border: oklch(0.28 0 0);
+  --sidebar-ring: oklch(0.65 0.21 293);
+  --gradient-primary: linear-gradient(135deg, oklch(0.58 0.22 293), var(--primary-glow));
+  --gradient-festive: linear-gradient(
+    135deg,
+    oklch(0.24 0.12 295),
+    oklch(0.5 0.22 320) 60%,
+    oklch(0.75 0.16 60)
+  );
+  --gradient-night: linear-gradient(160deg, oklch(0.17 0.012 280), oklch(0.27 0.07 293));
+  --shadow-card: 0 8px 24px -12px oklch(0 0 0 / 70%);
+  --shadow-glow: 0 12px 32px -10px color-mix(in oklab, var(--primary) 45%, transparent);
 }
 
 @layer base {
@@ -144,12 +187,27 @@
   }
 }
 
-@utility bg-gradient-primary { background-image: var(--gradient-primary); }
-@utility bg-gradient-festive { background-image: var(--gradient-festive); }
-@utility bg-gradient-night { background-image: var(--gradient-night); }
-@utility shadow-card { box-shadow: var(--shadow-card); }
-@utility shadow-glow { box-shadow: var(--shadow-glow); }
-@utility no-scrollbar { scrollbar-width: none; &::-webkit-scrollbar { display: none; } }
+@utility bg-gradient-primary {
+  background-image: var(--gradient-primary);
+}
+@utility bg-gradient-festive {
+  background-image: var(--gradient-festive);
+}
+@utility bg-gradient-night {
+  background-image: var(--gradient-night);
+}
+@utility shadow-card {
+  box-shadow: var(--shadow-card);
+}
+@utility shadow-glow {
+  box-shadow: var(--shadow-glow);
+}
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
 
 :root {
   --festival-diwali: oklch(0.94 0.06 75);
@@ -158,10 +216,47 @@
   --festival-holi: oklch(0.94 0.045 350);
   --festival-rakhi: oklch(0.96 0.035 35);
 }
-.festival-collection { background: var(--muted); padding-inline: 1.25rem; }
-.festival-diwali, .festival-dhanteras { background: var(--festival-diwali); }
-.festival-christmas { background: var(--festival-christmas); }
-.festival-newYear { background: var(--festival-new-year); }
-.festival-holi { background: var(--festival-holi); }
-.festival-rakshaBandhan, .festival-bhaiDooj { background: var(--festival-rakhi); }
-.dark .festival-collection { background: var(--muted); }
+.festival-collection {
+  background: var(--muted);
+  padding-inline: 1.25rem;
+}
+.festival-diwali,
+.festival-dhanteras {
+  background: var(--festival-diwali);
+}
+.festival-christmas {
+  background: var(--festival-christmas);
+}
+.festival-newYear {
+  background: var(--festival-new-year);
+}
+.festival-holi {
+  background: var(--festival-holi);
+}
+.festival-rakshaBandhan,
+.festival-bhaiDooj {
+  background: var(--festival-rakhi);
+}
+
+/* Festival tinted collections become neutral dark surfaces in dark mode so no
+   pastel light-mode wash is left on black. */
+.dark .festival-collection {
+  background: var(--muted);
+}
+.dark .festival-diwali,
+.dark .festival-dhanteras {
+  background: oklch(0.23 0.04 80);
+}
+.dark .festival-christmas {
+  background: oklch(0.22 0.04 155);
+}
+.dark .festival-newYear {
+  background: oklch(0.23 0.035 250);
+}
+.dark .festival-holi {
+  background: oklch(0.23 0.045 350);
+}
+.dark .festival-rakshaBandhan,
+.dark .festival-bhaiDooj {
+  background: oklch(0.23 0.035 40);
+}

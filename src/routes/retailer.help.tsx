@@ -28,7 +28,15 @@ export const Route = createFileRoute("/retailer/help")({
 const FAQ: [string, string][] = [
   [
     "How do I add my store name to a template?",
-    "Open any template, fill in your store name, phone and address, then download. Your Brand Kit pre-fills these fields.",
+    "Open any template, fill in your store name, phone and address, then download. Your profile details pre-fill these fields.",
+  ],
+  [
+    "Can I change products in the Product Catalog?",
+    "No. The Product Catalog is published by the manufacturers you are linked with — you can browse, search and view photos, prices, specifications and availability, but only the manufacturer can add, edit or delete a product.",
+  ],
+  [
+    "How soon do new products appear in my catalog?",
+    "As soon as the manufacturer saves them. The catalog is read live from their account, so there is nothing to sync or download.",
   ],
   [
     "Can I post directly to Instagram or WhatsApp?",
