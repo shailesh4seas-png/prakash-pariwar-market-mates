@@ -30,12 +30,12 @@ interface BrandDetailsPanelProps {
 }
 
 const FIELD_LABEL: Record<PlaceholderField, string> = {
-  mfr_name: "Owner / contact name",
+  mfr_name: "Owner name",
   mfr_business_name: "Manufacturer name",
   mfr_logo: "Manufacturer logo",
   mfr_phone: "Mobile no.",
   mfr_email: "Email",
-  rtl_name: "Retailer owner name",
+  rtl_name: "Retailer name",
   rtl_business_name: "Shop / store name",
   rtl_logo: "Retailer logo",
   rtl_phone: "Retailer mobile",
@@ -169,10 +169,10 @@ export function BrandDetailsPanel({ spec, onSpecChange, manufacturer }: BrandDet
               value={currentValue(
                 spec,
                 field,
-                field === "mfr_business_name"
-                  ? manufacturer.businessName
-                  : field === "mfr_name"
-                    ? (manufacturer.name ?? "")
+                field === "mfr_name"
+                  ? (manufacturer.name ?? "")
+                  : field === "mfr_business_name"
+                    ? manufacturer.businessName
                     : field === "mfr_phone"
                       ? (manufacturer.phone ?? "")
                       : (manufacturer.email ?? ""),
